@@ -162,9 +162,7 @@
       font-size: 11px;
     }
 
-    .gridFull {
-      grid-column: 1 / -1;
-    }
+    .gridFull { grid-column: 1 / -1; }
 
     .toolbar {
       display: flex;
@@ -265,59 +263,92 @@
       line-height: 1.35;
     }
 
-    .filters {
+    /* Review panel */
+    .reviewWrap {
+      display: grid;
+      gap: 10px;
+    }
+
+    .reviewItem {
       border: 1px solid var(--border);
       border-radius: 14px;
       background: rgba(0,0,0,.12);
-      padding: 10px 12px;
+      padding: 12px;
       display: grid;
       gap: 10px;
     }
 
-    .filters .fopt {
-      display: inline-flex;
+    .reviewTop {
+      display: flex;
+      gap: 10px;
       align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      color: var(--text);
-      user-select: none;
+      justify-content: space-between;
+      flex-wrap: wrap;
     }
 
-    .filters input[type="checkbox"] {
-      width: 16px;
-      height: 16px;
-    }
-
-    .fdates {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .fdate { display: grid; gap: 6px; }
-
-    .flabel {
-      font-size: 12px;
-      color: var(--muted2);
-      text-transform: uppercase;
-      letter-spacing: .12em;
-    }
-
-    input[type="date"] {
-      width: 100%;
-      padding: 10px 12px;
-      border-radius: 12px;
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
       border: 1px solid var(--border);
-      background: rgba(0,0,0,.18);
-      color: var(--text);
-      outline: none;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.14);
+      white-space: nowrap;
     }
 
-    .fmeta {
-      font-size: 12px;
-      color: var(--muted2);
-      line-height: 1.35;
+    .reviewBtns {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
     }
+
+    .reviewBtns button {
+      padding: 8px 10px;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    button.good {
+      background: rgba(94,227,143,.14);
+    }
+
+    button.bad {
+      background: rgba(255,106,138,.14);
+    }
+
+    .reviewText {
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(0,0,0,.14);
+    }
+
+    .reviewLabel {
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 6px;
+    }
+
+    mark.tok {
+      background: rgba(106,168,255,.28);
+      color: var(--text);
+      padding: 1px 3px;
+      border-radius: 6px;
+    }
+
+    .decision {
+      font-weight: 750;
+    }
+
+    .decision.approved { color: var(--good); }
+    .decision.flagged { color: var(--bad); }
 
     @media (max-width: 520px) {
       .fdates { grid-template-columns: 1fr; }
@@ -417,7 +448,7 @@
         <div class="uploader">
           <input id="stockFile" type="file" accept=".xlsx,.xls" />
           <div class="hint">
-            Expected: a column named <span class="mono">Group Desc</span>. If it is missing, you can still load the file, but the Group Desc summary will be unavailable.
+            Expected: columns named <span class="mono">Part Code</span>, <span class="mono">Part Desc</span>, <span class="mono">Group Desc</span>, and <span class="mono">Last Movement Date</span>.
           </div>
         </div>
 
@@ -488,7 +519,7 @@
         <div class="uploader">
           <input id="vaultFile" type="file" accept=".xlsx,.xls" />
           <div class="hint">
-            This file should list all Vault files. The next step will match stock items to drawings to generate a prioritised audit.
+            Expected: columns named <span class="mono">Stock Number</span>, <span class="mono">Filetype</span>, <span class="mono">State</span>, and <span class="mono">Title</span>.
           </div>
         </div>
 
@@ -528,7 +559,7 @@
 
         <div id="rulesPanel" class="rules" style="display:none;">
           <div class="sectionTitle" style="margin-top:0;">Hidden rules panel</div>
-          <div class="hint">This panel will become fully customisable. For now the primary association rule is hard-coded: <b>Stock Part Code</b> ↔ <b>Vault Stock Number</b> (case-insensitive exact match). You can disable it to manually choose match columns for troubleshooting.</div>
+          <div class="hint">This panel will become fully customisable. For now the primary association rule is hard-coded: <b>Stock Part Code</b> ↔ <b>Vault Stock Number</b> (case-insensitive exact match).</div>
 
           <div style="margin-top:10px; display:grid; gap:10px;">
             <label class="fopt" style="margin:0;"><input type="checkbox" id="defaultMatchToggle" checked /> <span><b>Use default association</b> (Part Code ↔ Stock Number)</span></label>
@@ -536,6 +567,23 @@
 
             <label class="fopt" style="margin:0;"><input type="checkbox" id="descTitleToggle" /> <span><b>Also try Part Desc ↔ Title</b> (loose word match)</span></label>
             <div class="fmeta" id="descTitleMeta">Off. If enabled, rows that fail the default match will try a word-overlap match between Stock Part Desc and Vault Title.</div>
+
+            <label class="fopt" style="margin:0;"><input type="checkbox" id="descTitleTunableToggle" /> <span><b>Also try Part Desc ↔ Title (tunable)</b> (loose word match)</span></label>
+            <div class="fmeta" id="descTitleTunableMeta">Off. If enabled, uses the sliders below to try to reduce false negatives (may increase false positives).</div>
+
+            <div id="tunableControls" style="display:none; gap:10px;">
+              <div class="fmeta" style="margin-top:2px;">Thresholds</div>
+              <div class="rulesGrid" style="margin-top:0;">
+                <div>
+                  <div class="flabel">Min shared tokens: <span id="tunableTokVal" class="mono">4</span></div>
+                  <input type="range" id="tunableTok" min="1" max="10" step="1" value="4" style="width:100%;" />
+                </div>
+                <div>
+                  <div class="flabel">Min Jaccard: <span id="tunableJacVal" class="mono">0.50</span></div>
+                  <input type="range" id="tunableJac" min="0.10" max="0.90" step="0.05" value="0.50" style="width:100%;" />
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="rulesGrid" id="manualMatchGrid">
@@ -562,6 +610,27 @@
       </div>
     </section>
 
+    <section class="card gridFull" id="reviewCard" style="display:none;">
+      <div class="head">
+        <h2>4) Match review</h2>
+        <div class="pill" id="reviewStatus">Hidden</div>
+      </div>
+      <div class="body">
+        <div class="toolbar" style="margin-bottom:12px;">
+          <div class="left">
+            <span class="hint" id="reviewHint">This panel appears only when a Part Desc ↔ Title rule is used.</span>
+          </div>
+          <div class="right">
+            <button class="secondary" id="reviewNext" disabled>Show another 10</button>
+          </div>
+        </div>
+
+        <div class="reviewWrap" id="reviewList"></div>
+
+        <div class="footerNote">Use this to spot-check and flag false positives so we can improve the rules later.</div>
+      </div>
+    </section>
+
     <section class="card gridFull">
       <div class="head">
         <h2>App log</h2>
@@ -577,643 +646,6 @@
   <script>
     // -----------------------------
     // State
-    // -----------------------------
-    const state = {
-      audit: {
-        // Default association rule (case-insensitive exact match):
-        // Stock "Part Code" ↔ Vault "Stock Number"
-        useDefaultMatchRule: true,
-        // Secondary association rule (toggle, off by default):
-        // Stock "Part Desc" ↔ Vault "Title" (loose word overlap)
-        useDescTitleRule: false,
-        stockMatchCol: null,
-        vaultMatchCol: null,
-
-        stockMatchIdx: -1,
-        stockGroupIdx: -1,
-        vaultMatchIdx: -1,
-        vaultTypeIdx: -1,
-        vaultStateIdx: -1,
-
-        vaultIndex: new Map(),
-        // Title-based inverted index for fuzzy matching (token -> Set(titleKey))
-        titleTokenIndex: new Map(),
-        // Title key -> list of vault entries
-        titleToEntries: new Map(),
-
-        counts: {
-          released: 0,
-          unreleased: 0,
-          pdf: 0,
-          modelled: 0,
-          folder: 0,
-          missing: 0,
-          totalConsidered: 0,
-        },
-      },
-
-      stock: {
-        fileName: null,
-        headers: [],
-        rawRows: [],
-        rows: [],
-        dateFilter: {
-          mode: 'none', // none | 6m | 12m | custom
-          start: null,
-          end: null,
-          dateIdx: -1,
-        },
-        groupCounts: new Map(),
-        groupSelected: new Map(),
-        _sheetName: null,
-      },
-
-      vault: {
-        fileName: null,
-        headers: [],
-        rows: [],
-      },
-    };
-
-    // -----------------------------
-    // Elements
-    // -----------------------------
-    const el = {
-      auditStatus: document.getElementById('auditStatus'),
-      auditRows: document.getElementById('auditRows'),
-      auditHint: document.getElementById('auditHint'),
-      runAudit: document.getElementById('runAudit'),
-      toggleRules: document.getElementById('toggleRules'),
-      rulesPanel: document.getElementById('rulesPanel'),
-      stockMatchCol: document.getElementById('stockMatchCol'),
-      vaultMatchCol: document.getElementById('vaultMatchCol'),
-      defaultMatchToggle: document.getElementById('defaultMatchToggle'),
-      defaultMatchMeta: document.getElementById('defaultMatchMeta'),
-      descTitleToggle: document.getElementById('descTitleToggle'),
-      descTitleMeta: document.getElementById('descTitleMeta'),
-      manualMatchGrid: document.getElementById('manualMatchGrid'),
-
-      stockFile: document.getElementById('stockFile'),
-      vaultFile: document.getElementById('vaultFile'),
-      stockStatus: document.getElementById('stockStatus'),
-      vaultStatus: document.getElementById('vaultStatus'),
-      stockHeaders: document.getElementById('stockHeaders'),
-      vaultHeaders: document.getElementById('vaultHeaders'),
-      groupList: document.getElementById('groupList'),
-      groupSearch: document.getElementById('groupSearch'),
-      selectAll: document.getElementById('selectAll'),
-      selectNone: document.getElementById('selectNone'),
-      selectDefault: document.getElementById('selectDefault'),
-      log: document.getElementById('log'),
-      logStatus: document.getElementById('logStatus'),
-      f6m: document.getElementById('f6m'),
-      f12m: document.getElementById('f12m'),
-      fcustom: document.getElementById('fcustom'),
-      fStart: document.getElementById('fStart'),
-      fEnd: document.getElementById('fEnd'),
-      fMeta: document.getElementById('fMeta'),
-      vaultFiletypeList: document.getElementById('vaultFiletypeList'),
-    };
-
-    // -----------------------------
-    // Helpers
-    // -----------------------------
-    function hasNonEmpty(v) {
-      return String(v ?? '').trim() !== '';
-    }
-
-    function filterRowsByRequiredColumn(rows, idx) {
-      if (idx === -1) return { rows, dropped: 0 };
-      const out = [];
-      let dropped = 0;
-      for (const r of rows) {
-        if (hasNonEmpty(r[idx])) out.push(r);
-        else dropped++;
-      }
-      return { rows: out, dropped };
-    }
-
-    function log(msg, level='info') {
-      const ts = new Date().toLocaleTimeString();
-      const prefix = level === 'error' ? '⛔' : level === 'warn' ? '⚠️' : 'ℹ️';
-      el.log.textContent = `${prefix} [${ts}] ${msg}\n` + el.log.textContent;
-      el.logStatus.textContent = level === 'error' ? 'Error' : level === 'warn' ? 'Warning' : 'OK';
-      el.logStatus.className = 'pill ' + (level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'ok');
-    }
-
-    function setStatus(which, text, kind='muted') {
-      const node = which === 'stock' ? el.stockStatus : el.vaultStatus;
-      node.textContent = text;
-      node.className = 'pill ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : kind === 'error' ? 'error' : '');
-    }
-
-    function clearNode(node) {
-      while (node.firstChild) node.removeChild(node.firstChild);
-    }
-
-    function renderChips(target, headers) {
-      clearNode(target);
-      if (!headers || headers.length === 0) {
-        const span = document.createElement('div');
-        span.className = 'hint muted';
-        span.textContent = 'No headers detected (empty sheet?)';
-        target.appendChild(span);
-        return;
-      }
-      headers.forEach((h, i) => {
-        const chip = document.createElement('div');
-        chip.className = 'chip';
-        const name = document.createElement('span');
-        name.textContent = String(h || '').trim() || '(blank)';
-        const idx = document.createElement('span');
-        idx.className = 'mono';
-        idx.textContent = `#${i+1}`;
-        chip.appendChild(name);
-        chip.appendChild(idx);
-        target.appendChild(chip);
-      });
-    }
-
-    function normalizeHeader(h) {
-      return String(h || '')
-        .trim()
-        .replace(/\s+/g, ' ')
-        .toLowerCase();
-    }
-
-    function findColumnIndex(headers, desired) {
-      const want = normalizeHeader(desired);
-      for (let i=0; i<headers.length; i++) {
-        if (normalizeHeader(headers[i]) === want) return i;
-      }
-      return -1;
-    }
-
-    // -----------------------------
-    // Audit helpers (v0)
-    // -----------------------------
-    function setAuditStatus(text, kind='muted') {
-      if (!el.auditStatus) return;
-      el.auditStatus.textContent = text;
-      el.auditStatus.className = 'pill ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : kind === 'error' ? 'error' : '');
-    }
-
-    function renderAuditCounts() {
-      if (!el.auditRows) return;
-      const c = state.audit.counts;
-      const rows = [
-        { key: 'released', label: 'Released', sub: 'Filetype .idw and State = Released' },
-        { key: 'unreleased', label: 'Unreleased', sub: 'Filetype .idw and State ≠ Released' },
-        { key: 'pdf', label: 'Only PDF located', sub: 'Filetype .pdf' },
-        { key: 'modelled', label: 'Modelled', sub: 'Filetype .ipt/.iam and no .idw' },
-        { key: 'folder', label: 'Folder', sub: 'Only Folder (Folder) exists' },
-        { key: 'missing', label: 'Missing', sub: 'No matching Vault row found' },
-      ];
-      el.auditRows.innerHTML = '';
-      for (const r of rows) {
-        const div = document.createElement('div');
-        div.className = 'auditRow';
-        div.innerHTML = '<div class="cat">' + r.label + '<span class="subtxt">' + r.sub + '</span></div>' +
-                        '<div class="num">' + Number(c[r.key] || 0).toLocaleString() + '</div>';
-        el.auditRows.appendChild(div);
-      }
-    }
-
-    function pickFirstHeader(headers, candidates) {
-      for (const c of candidates) {
-        const idx = findColumnIndex(headers, c);
-        if (idx !== -1) return headers[idx];
-      }
-      return null;
-    }
-
-    function safeCell(row, idx) {
-      if (idx < 0) return '';
-      return String((row[idx] ?? '')).trim();
-    }
-
-    function normalizeKey(v) {
-      return String(v || '').trim().toLowerCase();
-    }
-
-    // Tokenize for fuzzy matching (letters/numbers only, lowercased)
-    const STOPWORDS = new Set([
-      'a','an','and','are','as','at','be','but','by','for','from','has','have','if','in','into','is','it','its','of','on','or','s','such','t','that','the','their','then','there','these','they','this','to','was','will','with'
-    ]);
-
-    function tokenizeLoose(s) {
-      const text = String(s || '').toLowerCase();
-      const raw = text.split(/[^a-z0-9]+/g).filter(Boolean);
-      const out = [];
-
-      // Split mixed alphanumeric chunks at boundaries, e.g. "150mm" -> ["150", "mm"], "m12" stays as "m12" (already useful).
-      const splitMixed = (tok) => {
-        // Keep short letter+digits identifiers intact (e.g., m12, d10, ab123)
-        if (/^[a-z]{1,3}\d{1,6}$/.test(tok)) return [tok];
-
-        // Split number+letters suffix (e.g., 150mm -> 150, mm)
-        if (/^\d{1,8}[a-z]{1,4}$/.test(tok)) {
-          const m = tok.match(/^(\d{1,8})([a-z]{1,4})$/);
-          return m ? [m[1], m[2]] : [tok];
-        }
-
-        // General split at letter<->digit boundaries
-        const withBars = tok.replace(/([a-z])([0-9])/g, '$1|$2').replace(/([0-9])([a-z])/g, '$1|$2');
-        return withBars.split('|').filter(Boolean);
-      };
-
-      for (const chunk of raw) {
-        const parts = splitMixed(chunk);
-        for (const tok of parts) {
-          if (tok.length < 3) continue;
-          if (STOPWORDS.has(tok)) continue;
-          out.push(tok);
-        }
-      }
-      return out;
-    }
-
-    function unique(arr) {
-      return Array.from(new Set(arr));
-    }
-
-    function jaccard(aSet, bSet) {
-      let inter = 0;
-      for (const x of aSet) if (bSet.has(x)) inter++;
-      const union = aSet.size + bSet.size - inter;
-      return union ? inter / union : 0;
-    }
-
-    // Fuzzy match config (can move to a more advanced rules editor later)
-    const FUZZY_MIN_SHARED_TOKENS = 4; // conservative
-    const FUZZY_MIN_JACCARD = 0.50; // conservative
-
-    // Normalize any path-ish string to a base filename (no directories)
-    function stripPath(nameVal) {
-      const s = String(nameVal || '').trim();
-      // Replace Windows separators with '/' then split.
-      const unified = s.split('\\\\').join('/');
-      const parts = unified.split('/');
-      return parts.length ? parts[parts.length - 1] : unified;
-    }
-
-    function baseNameFromAny(nameVal) {
-      const just = stripPath(nameVal);
-      const low = just.toLowerCase();
-      const dot = low.lastIndexOf('.');
-      return (dot > 0 ? low.slice(0, dot) : low);
-    }
-
-    function detectExt(filetypeVal, nameVal) {
-      const t = String(filetypeVal || '').toLowerCase();
-      const n = String(nameVal || '').toLowerCase();
-      const exts = ['.idw', '.pdf', '.ipt', '.iam'];
-      for (const e of exts) {
-        if (t.includes(e)) return e;
-        if (n.endsWith(e)) return e;
-      }
-      return '';
-    }
-
-    function buildSelectOptions(selectEl, headers, preferredHeader) {
-      if (!selectEl) return;
-      selectEl.innerHTML = '';
-      for (const h of headers) {
-        const opt = document.createElement('option');
-        opt.value = h;
-        opt.textContent = h || '(blank)';
-        if (preferredHeader && normalizeHeader(h) === normalizeHeader(preferredHeader)) opt.selected = true;
-        selectEl.appendChild(opt);
-      }
-    }
-
-    function updateAuditMappings() {
-      if (state.stock.headers.length) {
-        state.audit.stockMatchIdx = state.audit.stockMatchCol ? findColumnIndex(state.stock.headers, state.audit.stockMatchCol) : -1;
-        state.audit.stockGroupIdx = findColumnIndex(state.stock.headers, 'Group Desc');
-      }
-      if (state.vault.headers.length) {
-        state.audit.vaultMatchIdx = state.audit.vaultMatchCol ? findColumnIndex(state.vault.headers, state.audit.vaultMatchCol) : -1;
-        state.audit.vaultTypeIdx = findColumnIndex(state.vault.headers, 'Filetype');
-        state.audit.vaultStateIdx = findColumnIndex(state.vault.headers, 'State');
-      }
-    }
-
-    function buildVaultIndex() {
-      state.audit.vaultIndex = new Map();
-      if (!state.vault.rows.length) return;
-      updateAuditMappings();
-
-      const mIdx = state.audit.vaultMatchIdx;
-      const tIdx = state.audit.vaultTypeIdx;
-      const sIdx = state.audit.vaultStateIdx;
-
-      for (const r of state.vault.rows) {
-        const key = normalizeKey(safeCell(r, mIdx));
-        if (!key) continue;
-        const nameVal = safeCell(r, mIdx);
-        const typeVal = safeCell(r, tIdx);
-        const stateVal = safeCell(r, sIdx);
-        const ext = detectExt(typeVal, nameVal);
-        const base = baseNameFromAny(nameVal);
-        const entry = { key, name: nameVal, base, ext, filetype: String(typeVal || ''), state: String(stateVal || ''), row: r };
-        if (!state.audit.vaultIndex.has(key)) state.audit.vaultIndex.set(key, []);
-        state.audit.vaultIndex.get(key).push(entry);
-      }
-    }
-
-    function buildTitleIndex() {
-      state.audit.titleTokenIndex = new Map();
-      state.audit.titleToEntries = new Map();
-      if (!state.vault.rows.length) return;
-      updateAuditMappings();
-
-      const titleIdx = findColumnIndex(state.vault.headers, 'Title');
-      const tIdx = state.audit.vaultTypeIdx;
-      const sIdx = state.audit.vaultStateIdx;
-
-      if (titleIdx === -1) return;
-
-      for (const r of state.vault.rows) {
-        const titleRaw = safeCell(r, titleIdx);
-        const titleKey = normalizeKey(titleRaw);
-        if (!titleKey) continue;
-
-        const typeVal = safeCell(r, tIdx);
-        const stateVal = safeCell(r, sIdx);
-
-        // For Title-based association, we still need a name-ish field to extract extension/base if possible.
-        // We'll fall back to Filetype/Title text.
-        const ext = detectExt(typeVal, titleRaw);
-        const base = baseNameFromAny(titleRaw);
-
-        const entry = { key: titleKey, name: titleRaw, base, ext, filetype: String(typeVal || ''), state: String(stateVal || ''), row: r };
-
-        if (!state.audit.titleToEntries.has(titleKey)) state.audit.titleToEntries.set(titleKey, []);
-        state.audit.titleToEntries.get(titleKey).push(entry);
-
-        const toks = unique(tokenizeLoose(titleRaw));
-        for (const tok of toks) {
-          if (!state.audit.titleTokenIndex.has(tok)) state.audit.titleTokenIndex.set(tok, new Set());
-          state.audit.titleTokenIndex.get(tok).add(titleKey);
-        }
-      }
-    }
-
-    function findBestTitleMatch(stockDesc) {
-      const toks = unique(tokenizeLoose(stockDesc));
-      if (toks.length === 0) return { titleKey: null, score: 0, shared: 0 };
-
-      // Gather candidate titles by token postings.
-      const candidateCounts = new Map();
-      for (const tok of toks) {
-        const set = state.audit.titleTokenIndex.get(tok);
-        if (!set) continue;
-        for (const titleKey of set) {
-          candidateCounts.set(titleKey, (candidateCounts.get(titleKey) || 0) + 1);
-        }
-      }
-
-      let bestKey = null;
-      let bestShared = 0;
-      let bestScore = 0;
-
-      const aSet = new Set(toks);
-
-      // Score only candidates that meet min shared tokens first.
-      for (const [titleKey, shared] of candidateCounts.entries()) {
-        if (shared < FUZZY_MIN_SHARED_TOKENS) continue;
-
-        // Build token set for titleKey on-the-fly by tokenizing once from representative name.
-        const entries = state.audit.titleToEntries.get(titleKey);
-        if (!entries || entries.length === 0) continue;
-        const titleText = entries[0].name;
-        const bSet = new Set(unique(tokenizeLoose(titleText)));
-
-        const score = jaccard(aSet, bSet);
-        if (score > bestScore || (score === bestScore && shared > bestShared)) {
-          bestKey = titleKey;
-          bestShared = shared;
-          bestScore = score;
-        }
-      }
-
-      if (!bestKey) return { titleKey: null, score: 0, shared: 0 };
-      if (bestShared < FUZZY_MIN_SHARED_TOKENS) return { titleKey: null, score: 0, shared: 0 };
-      if (bestScore < FUZZY_MIN_JACCARD) return { titleKey: null, score: 0, shared: 0 };
-      return { titleKey: bestKey, score: bestScore, shared: bestShared };
-    }
-
-    function getFilteredStockRows() {
-      const rows = state.stock.rows || [];
-      const gIdx = state.audit.stockGroupIdx;
-      if (gIdx === -1 || !state.stock.groupSelected || state.stock.groupSelected.size === 0) return rows;
-      const out = [];
-      for (const r of rows) {
-        const g = safeCell(r, gIdx);
-        if (!g) continue;
-        if (state.stock.groupSelected.get(g) === false) continue;
-        out.push(r);
-      }
-      return out;
-    }
-
-    function isReleasedState(stateVal) {
-      return normalizeHeader(stateVal) === 'released';
-    }
-
-    function isFolderType(typeVal) {
-      return normalizeHeader(typeVal) === normalizeHeader('Folder (Folder)');
-    }
-
-    function classifyStockRow(vaultMatches, stockKeyBase) {
-      if (!vaultMatches || vaultMatches.length === 0) return 'missing';
-
-      const hasFolder = vaultMatches.some(v => isFolderType(v.filetype));
-      const hasNonFolder = vaultMatches.some(v => !isFolderType(v.filetype));
-      if (hasFolder && !hasNonFolder) return 'folder';
-
-      const idws = vaultMatches.filter(v => v.ext === '.idw');
-      if (idws.length) {
-        const anyRel = idws.some(v => isReleasedState(v.state));
-        return anyRel ? 'released' : 'unreleased';
-      }
-
-      if (vaultMatches.some(v => v.ext === '.pdf')) return 'pdf';
-
-      const models = vaultMatches.filter(v => v.ext === '.ipt' || v.ext === '.iam');
-      if (models.length) {
-        const base = stockKeyBase || '';
-        const anyIdwSameBase = vaultMatches.some(v => v.ext === '.idw' && v.base === base);
-        if (!anyIdwSameBase) return 'modelled';
-      }
-
-      return 'missing';
-    }
-
-    let _auditTimer = null;
-    function scheduleAuditRun() {
-      if (_auditTimer) clearTimeout(_auditTimer);
-      _auditTimer = setTimeout(runAuditNow, 150);
-    }
-
-    function initRulesPanel() {
-      if (!state.stock.headers.length || !state.vault.headers.length) return;
-
-      const fixedTypeIdx = findColumnIndex(state.vault.headers, 'Filetype');
-      const fixedStateIdx = findColumnIndex(state.vault.headers, 'State');
-      if (fixedTypeIdx === -1 || fixedStateIdx === -1) {
-        setAuditStatus('Vault export unexpected', 'error');
-        el.runAudit.disabled = true;
-        el.toggleRules.disabled = false;
-        log('Vault export is missing required columns. Expected headers: "Filetype" and "State".', 'error');
-        return;
-      }
-
-      const pcIdx = findColumnIndex(state.stock.headers, 'Part Code');
-      const snIdx = findColumnIndex(state.vault.headers, 'Stock Number');
-
-      if (pcIdx === -1 || snIdx === -1) {
-        setAuditStatus('Missing required columns', 'error');
-        el.runAudit.disabled = true;
-        el.toggleRules.disabled = false;
-        log('Expected headers not found. Stock requires "Part Code". Vault requires "Stock Number".', 'error');
-        state.audit.useDefaultMatchRule = false;
-      } else {
-        state.audit.useDefaultMatchRule = true;
-        state.audit.stockMatchCol = 'Part Code';
-        state.audit.vaultMatchCol = 'Stock Number';
-      }
-
-      // Secondary rule prerequisites
-      const pdIdx = findColumnIndex(state.stock.headers, 'Part Desc');
-      const vtIdx = findColumnIndex(state.vault.headers, 'Title');
-      const canUseDescTitle = (pdIdx !== -1 && vtIdx !== -1);
-
-      if (el.descTitleToggle) {
-        el.descTitleToggle.disabled = !canUseDescTitle;
-        // Leave OFF by default unless user already ticked it.
-        if (!canUseDescTitle) el.descTitleToggle.checked = false;
-        state.audit.useDescTitleRule = !!el.descTitleToggle.checked && canUseDescTitle;
-      } else {
-        state.audit.useDescTitleRule = false;
-      }
-
-      if (el.descTitleMeta) {
-        if (!canUseDescTitle) {
-          el.descTitleMeta.textContent = 'Unavailable. Requires Stock column "Part Desc" and Vault column "Title".';
-        } else {
-          el.descTitleMeta.textContent = 'Off. If enabled, rows that fail the default match will try a word-overlap match between Stock Part Desc and Vault Title.';
-        }
-      }
-
-      const stockDefault = pickFirstHeader(state.stock.headers, ['Part Code', 'Part Number', 'Part No', 'Item', 'Item No', 'Stock Code', 'Code', 'Number', 'Name', 'Part']);
-      const vaultDefault = pickFirstHeader(state.vault.headers, ['Stock Number', 'Name', 'File Name', 'Filename', 'File', 'Part Number', 'Part No']);
-
-      buildSelectOptions(el.stockMatchCol, state.stock.headers, state.audit.stockMatchCol || stockDefault);
-      buildSelectOptions(el.vaultMatchCol, state.vault.headers, state.audit.vaultMatchCol || vaultDefault);
-
-      if (el.defaultMatchToggle) el.defaultMatchToggle.checked = !!state.audit.useDefaultMatchRule;
-      const manualEnabled = !state.audit.useDefaultMatchRule;
-      if (el.manualMatchGrid) el.manualMatchGrid.style.display = manualEnabled ? 'grid' : 'none';
-      if (el.stockMatchCol) el.stockMatchCol.disabled = !manualEnabled;
-      if (el.vaultMatchCol) el.vaultMatchCol.disabled = !manualEnabled;
-      if (el.defaultMatchMeta) {
-        el.defaultMatchMeta.textContent = state.audit.useDefaultMatchRule
-          ? 'Active. Matching is exact after trimming and lowercasing (case-insensitive).'
-          : 'Disabled. Manual match columns enabled (still case-insensitive exact on the selected columns).';
-      }
-
-      el.runAudit.disabled = false;
-      el.toggleRules.disabled = false;
-
-      updateAuditMappings();
-      buildVaultIndex();
-      if (canUseDescTitle) buildTitleIndex();
-
-      setAuditStatus('Ready', 'warn');
-      if (el.auditHint) el.auditHint.textContent = 'Click Run audit, or it will auto-run when filters change.';
-
-      scheduleAuditRun();
-    }
-
-    function runAuditNow() {
-      if (!state.stock.fileName || !state.vault.fileName) {
-        setAuditStatus('Waiting for files', 'warn');
-        if (el.auditHint) el.auditHint.textContent = 'Load both files to compute results.';
-        return;
-      }
-
-      updateAuditMappings();
-      if (state.audit.stockMatchIdx === -1 || state.audit.vaultMatchIdx === -1) {
-        setAuditStatus('Missing mapping', 'warn');
-        if (el.auditHint) el.auditHint.textContent = 'Required match columns not found (Part Code / Stock Number).';
-        return;
-      }
-
-      // (Re)build indexes
-      buildVaultIndex();
-      if (state.audit.useDescTitleRule) buildTitleIndex();
-
-      const filteredStock = getFilteredStockRows();
-      const sIdx = state.audit.stockMatchIdx;
-      const partDescIdx = findColumnIndex(state.stock.headers, 'Part Desc');
-
-      const counts = { released: 0, unreleased: 0, pdf: 0, modelled: 0, folder: 0, missing: 0, totalConsidered: filteredStock.length };
-      let fuzzyUsed = 0;
-
-      for (const r of filteredStock) {
-        const key = normalizeKey(safeCell(r, sIdx));
-        let matches = key ? (state.audit.vaultIndex.get(key) || []) : [];
-
-        // If no matches on the primary rule, optionally try Part Desc ↔ Title fuzzy match.
-        if ((!matches || matches.length === 0) && state.audit.useDescTitleRule && partDescIdx !== -1) {
-          const desc = safeCell(r, partDescIdx);
-          const best = findBestTitleMatch(desc);
-          if (best.titleKey) {
-            matches = state.audit.titleToEntries.get(best.titleKey) || [];
-            if (matches.length) fuzzyUsed++;
-          }
-        }
-
-        if (!matches || matches.length === 0) {
-          counts.missing++;
-          continue;
-        }
-
-        const base = baseNameFromAny(key);
-        const cls = classifyStockRow(matches, base);
-        counts[cls] = (counts[cls] || 0) + 1;
-      }
-
-      state.audit.counts = counts;
-      renderAuditCounts();
-
-      setAuditStatus('Computed', 'ok');
-      const extra = state.audit.useDescTitleRule ? ` (Title matches used: ${fuzzyUsed.toLocaleString()})` : '';
-      if (el.auditHint) el.auditHint.textContent = 'Considered ' + counts.totalConsidered.toLocaleString() + ' stock rows after filters.' + extra;
-    }
-
-    // -----------------------------
-    // XLSX reader
-    // -----------------------------
-    async function readXlsx(file) {
-      const buf = await file.arrayBuffer();
-      const wb = XLSX.read(buf, { type: 'array' });
-      const firstSheetName = wb.SheetNames[0];
-      const ws = wb.Sheets[firstSheetName];
-      if (!ws) return { headers: [], rows: [], sheet: firstSheetName || '' };
-
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
-      if (!data || data.length === 0) return { headers: [], rows: [], sheet: firstSheetName };
-
-      const headers = (data[0] || []).map(h => String(h ?? '').trim());
-      const rows = data.slice(1);
-      return { headers, rows, sheet: firstSheetName };
-    }
-
-    // -----------------------------
-    // Group list
     // -----------------------------
     const DEFAULT_GROUP_DESCS = [
       'Bolt Components',
@@ -1241,23 +673,508 @@
       'Tensioners,Footpumps & Com',
       'Washers',
     ];
-    const DEFAULT_GROUP_NORM = new Set(DEFAULT_GROUP_DESCS.map(d => normalizeHeader(d)));
 
-    function applyDefaultGroupSelection() {
-      if (!state.stock.groupSelected || state.stock.groupSelected.size === 0) return { selected: 0, total: 0 };
-      let sel = 0;
-      for (const k of state.stock.groupSelected.keys()) {
-        const on = DEFAULT_GROUP_NORM.has(normalizeHeader(k));
-        state.stock.groupSelected.set(k, on);
-        if (on) sel++;
-      }
-      return { selected: sel, total: state.stock.groupSelected.size };
+    const state = {
+      audit: {
+        useDefaultMatchRule: true,
+        useDescTitleRule: false,
+        useDescTitleTunableRule: false,
+        tunableMinSharedTokens: 4,
+        tunableMinJaccard: 0.50,
+
+        stockMatchCol: 'Part Code',
+        vaultMatchCol: 'Stock Number',
+
+        stockMatchIdx: -1,
+        stockGroupIdx: -1,
+        stockDescIdx: -1,
+        stockMoveDateIdx: -1,
+
+        vaultMatchIdx: -1,
+        vaultTypeIdx: -1,
+        vaultStateIdx: -1,
+        vaultTitleIdx: -1,
+
+        vaultIndex: new Map(),
+        titleTokenIndex: new Map(),
+        titleToEntries: new Map(),
+
+        counts: {
+          released: 0,
+          unreleased: 0,
+          pdf: 0,
+          modelled: 0,
+          folder: 0,
+          missing: 0,
+          totalConsidered: 0,
+        },
+
+        review: {
+          items: [],
+          cursor: 0,
+          decisions: new Map(), // key -> 'approved' | 'flagged'
+        },
+      },
+
+      stock: {
+        fileName: null,
+        headers: [],
+        rawRows: [],
+        rows: [],
+        groupCounts: new Map(),
+        groupSelected: new Map(),
+        dateFilter: {
+          mode: 'none',
+          start: null,
+          end: null,
+        },
+      },
+
+      vault: {
+        fileName: null,
+        headers: [],
+        rows: [],
+      },
+    };
+
+    // -----------------------------
+    // Elements
+    // -----------------------------
+    const el = {
+      stockFile: document.getElementById('stockFile'),
+      vaultFile: document.getElementById('vaultFile'),
+
+      stockStatus: document.getElementById('stockStatus'),
+      vaultStatus: document.getElementById('vaultStatus'),
+
+      stockHeaders: document.getElementById('stockHeaders'),
+      vaultHeaders: document.getElementById('vaultHeaders'),
+
+      groupList: document.getElementById('groupList'),
+      groupSearch: document.getElementById('groupSearch'),
+      selectAll: document.getElementById('selectAll'),
+      selectNone: document.getElementById('selectNone'),
+      selectDefault: document.getElementById('selectDefault'),
+
+      f6m: document.getElementById('f6m'),
+      f12m: document.getElementById('f12m'),
+      fcustom: document.getElementById('fcustom'),
+      fStart: document.getElementById('fStart'),
+      fEnd: document.getElementById('fEnd'),
+      fMeta: document.getElementById('fMeta'),
+
+      vaultFiletypeList: document.getElementById('vaultFiletypeList'),
+
+      auditStatus: document.getElementById('auditStatus'),
+      auditRows: document.getElementById('auditRows'),
+      auditHint: document.getElementById('auditHint'),
+      runAudit: document.getElementById('runAudit'),
+      toggleRules: document.getElementById('toggleRules'),
+      rulesPanel: document.getElementById('rulesPanel'),
+
+      defaultMatchToggle: document.getElementById('defaultMatchToggle'),
+      defaultMatchMeta: document.getElementById('defaultMatchMeta'),
+      descTitleToggle: document.getElementById('descTitleToggle'),
+      descTitleMeta: document.getElementById('descTitleMeta'),
+      descTitleTunableToggle: document.getElementById('descTitleTunableToggle'),
+      descTitleTunableMeta: document.getElementById('descTitleTunableMeta'),
+      tunableTok: document.getElementById('tunableTok'),
+      tunableTokVal: document.getElementById('tunableTokVal'),
+      tunableJac: document.getElementById('tunableJac'),
+      tunableJacVal: document.getElementById('tunableJacVal'),
+      tunableControls: document.getElementById('tunableControls'),
+
+      stockMatchCol: document.getElementById('stockMatchCol'),
+      vaultMatchCol: document.getElementById('vaultMatchCol'),
+      manualMatchGrid: document.getElementById('manualMatchGrid'),
+
+      log: document.getElementById('log'),
+      reviewCard: document.getElementById('reviewCard'),
+      reviewStatus: document.getElementById('reviewStatus'),
+      reviewHint: document.getElementById('reviewHint'),
+      reviewList: document.getElementById('reviewList'),
+      reviewNext: document.getElementById('reviewNext'),
+
+      logStatus: document.getElementById('logStatus'),
+    };
+
+    // -----------------------------
+    // Helpers
+    // -----------------------------
+    function clearNode(node) {
+      while (node.firstChild) node.removeChild(node.firstChild);
     }
 
-    function computeGroupCounts(rows, groupIdx) {
-      const counts = new Map();
+    function log(msg, level='info') {
+      const ts = new Date().toLocaleTimeString();
+      const prefix = level === 'error' ? '⛔' : level === 'warn' ? '⚠️' : 'ℹ️';
+      el.log.textContent = `${prefix} [${ts}] ${msg}\n` + el.log.textContent;
+      el.logStatus.textContent = level === 'error' ? 'Error' : level === 'warn' ? 'Warning' : 'OK';
+      el.logStatus.className = 'pill ' + (level === 'error' ? 'error' : level === 'warn' ? 'warn' : 'ok');
+    }
+
+    function setStatus(which, text, kind='muted') {
+      const node = which === 'stock' ? el.stockStatus : el.vaultStatus;
+      node.textContent = text;
+      node.className = 'pill ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : kind === 'error' ? 'error' : '');
+    }
+
+    function setAuditStatus(text, kind='muted') {
+      el.auditStatus.textContent = text;
+      el.auditStatus.className = 'pill ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : kind === 'error' ? 'error' : '');
+    }
+
+    function normalizeHeader(h) {
+      return String(h || '').trim().replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    function findColumnIndex(headers, desired) {
+      const want = normalizeHeader(desired);
+      for (let i=0; i<headers.length; i++) {
+        if (normalizeHeader(headers[i]) === want) return i;
+      }
+      return -1;
+    }
+
+    function safeCell(row, idx) {
+      if (idx < 0) return '';
+      return String((row[idx] ?? '')).trim();
+    }
+
+    function normalizeKey(v) {
+      return String(v || '').trim().toLowerCase();
+    }
+
+    function renderChips(target, headers) {
+      clearNode(target);
+      if (!headers || headers.length === 0) {
+        const span = document.createElement('div');
+        span.className = 'hint muted';
+        span.textContent = 'No headers detected (empty sheet?)';
+        target.appendChild(span);
+        return;
+      }
+      headers.forEach((h, i) => {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        const name = document.createElement('span');
+        name.textContent = String(h || '').trim() || '(blank)';
+        const idx = document.createElement('span');
+        idx.className = 'mono';
+        idx.textContent = `#${i+1}`;
+        chip.appendChild(name);
+        chip.appendChild(idx);
+        target.appendChild(chip);
+      });
+    }
+
+    function hasNonEmpty(v) {
+      return String(v ?? '').trim() !== '';
+    }
+
+    function filterRowsByRequiredColumn(rows, idx) {
+      if (idx === -1) return { rows, dropped: 0 };
+      const out = [];
+      let dropped = 0;
       for (const r of rows) {
-        const key = String((r[groupIdx] ?? '')).trim();
+        if (hasNonEmpty(r[idx])) out.push(r);
+        else dropped++;
+      }
+      return { rows: out, dropped };
+    }
+
+    function unique(arr) {
+      return Array.from(new Set(arr));
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function overlapTokenSet(aText, bText) {
+      const a = new Set(unique(tokenizeLoose(aText)));
+      const b = new Set(unique(tokenizeLoose(bText)));
+      const inter = new Set();
+      for (const x of a) if (b.has(x)) inter.add(x);
+      return inter;
+    }
+
+    // Highlight tokens by splitting into alphanumeric runs so we only highlight whole tokens.
+    function highlightTokensInText(text, tokenSet) {
+      const s = String(text ?? '');
+      const parts = s.split(/([a-zA-Z0-9]+)/g);
+      let out = '';
+      for (const part of parts) {
+        if (!part) continue;
+        if (/^[a-zA-Z0-9]+$/.test(part)) {
+          const k = part.toLowerCase();
+          if (tokenSet && tokenSet.has(k)) {
+            out += `<mark class="tok">${escapeHtml(part)}</mark>`;
+          } else {
+            out += escapeHtml(part);
+          }
+        } else {
+          out += escapeHtml(part);
+        }
+      }
+      return out;
+    }
+
+    // -----------------------------
+    // XLSX parsing
+    // -----------------------------
+    async function readXlsx(file) {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: 'array' });
+      const firstSheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[firstSheetName];
+      if (!ws) return { headers: [], rows: [], sheet: firstSheetName };
+
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '' });
+      if (!data || data.length === 0) return { headers: [], rows: [], sheet: firstSheetName };
+
+      const headers = (data[0] || []).map(h => String(h ?? '').trim());
+      const rows = data.slice(1);
+
+      // Trim trailing completely-empty rows (common when Excel has formatting)
+      const isEmptyRow = (r) => {
+        if (!r) return true;
+        for (const cell of r) {
+          if (String(cell ?? '').trim() !== '') return false;
+        }
+        return true;
+      };
+      let end = rows.length;
+      while (end > 0 && isEmptyRow(rows[end - 1])) end--;
+
+      return { headers, rows: rows.slice(0, end), sheet: firstSheetName };
+    }
+
+    // -----------------------------
+    // Stock: Group Desc + Date filtering
+    // -----------------------------
+    function computeCounts(rows, idx) {
+      const counts = new Map();
+      if (idx === -1) return counts;
+      for (const r of rows) {
+        const key = String((r[idx] ?? '')).trim();
+        if (!key) continue;
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+      return new Map(sorted);
+    }
+
+    function parseLooseDate(v) {
+      if (v == null) return null;
+      if (v instanceof Date && !isNaN(v.getTime())) return v;
+
+      // Excel serial
+      if (typeof v === 'number' && isFinite(v)) {
+        try {
+          const d = XLSX.SSF.parse_date_code(v);
+          if (d && d.y && d.m && d.d) {
+            // Use UTC to avoid timezone drift
+            return new Date(Date.UTC(d.y, d.m - 1, d.d));
+          }
+        } catch (_) {}
+      }
+
+      const s = String(v).trim();
+      if (!s) return null;
+
+      // YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        const [y, m, d] = s.split('-').map(n => Number(n));
+        return new Date(Date.UTC(y, m - 1, d));
+      }
+
+      // DD/MM/YYYY or D/M/YYYY
+      const m1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (m1) {
+        const dd = Number(m1[1]);
+        const mm = Number(m1[2]);
+        const yy = Number(m1[3]);
+        return new Date(Date.UTC(yy, mm - 1, dd));
+      }
+
+      // Fallback: Date.parse
+      const t = Date.parse(s);
+      if (!isNaN(t)) return new Date(t);
+
+      return null;
+    }
+
+    function setDateFilterMode(mode) {
+      state.stock.dateFilter.mode = mode;
+      // exclusive checkboxes
+      el.f6m.checked = (mode === '6m');
+      el.f12m.checked = (mode === '12m');
+      el.fcustom.checked = (mode === 'custom');
+
+      const enableCustom = (mode === 'custom');
+      el.fStart.disabled = !enableCustom;
+      el.fEnd.disabled = !enableCustom;
+
+      updateDateFilterRange();
+      scheduleAuditRun();
+    }
+
+    function updateDateFilterRange() {
+      const mode = state.stock.dateFilter.mode;
+      const now = new Date();
+      const utcToday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+
+      if (mode === 'none') {
+        state.stock.dateFilter.start = null;
+        state.stock.dateFilter.end = null;
+        el.fMeta.textContent = 'No date filtering applied.';
+        return;
+      }
+
+      if (mode === '6m' || mode === '12m') {
+        const months = (mode === '6m') ? 6 : 12;
+        const start = new Date(Date.UTC(utcToday.getUTCFullYear(), utcToday.getUTCMonth() - months, utcToday.getUTCDate()));
+        state.stock.dateFilter.start = start;
+        state.stock.dateFilter.end = utcToday;
+        el.fStart.value = start.toISOString().slice(0,10);
+        el.fEnd.value = utcToday.toISOString().slice(0,10);
+        el.fMeta.textContent = `Filtering to last ${months} months (inclusive).`;
+        return;
+      }
+
+      if (mode === 'custom') {
+        const start = el.fStart.value ? parseLooseDate(el.fStart.value) : null;
+        const end = el.fEnd.value ? parseLooseDate(el.fEnd.value) : null;
+        state.stock.dateFilter.start = start;
+        state.stock.dateFilter.end = end;
+        el.fMeta.textContent = 'Custom date filter applied (inclusive).';
+        return;
+      }
+    }
+
+    function rowPassesDateFilter(row) {
+      const mode = state.stock.dateFilter.mode;
+      if (mode === 'none') return true;
+      const idx = state.audit.stockMoveDateIdx;
+      if (idx === -1) return true; // no date column -> don't filter
+      const d = parseLooseDate(row[idx]);
+      if (!d) return false; // if filtering, rows without a date do not pass
+
+      const start = state.stock.dateFilter.start;
+      const end = state.stock.dateFilter.end;
+      if (start && d < start) return false;
+      if (end && d > end) return false;
+      return true;
+    }
+
+    function rebuildGroupSelectionDefaultAll() {
+      state.stock.groupSelected = new Map();
+      for (const [g] of state.stock.groupCounts.entries()) {
+        state.stock.groupSelected.set(g, true);
+      }
+    }
+
+    function applyDefaultGroupSelection() {
+      const wanted = new Set(DEFAULT_GROUP_DESCS.map(x => normalizeKey(x)));
+      let selected = 0;
+      for (const g of state.stock.groupSelected.keys()) {
+        const isOn = wanted.has(normalizeKey(g));
+        state.stock.groupSelected.set(g, isOn);
+        if (isOn) selected++;
+      }
+      return { selected };
+    }
+
+    function renderGroupList() {
+      const q = normalizeKey(el.groupSearch.value || '');
+      const list = el.groupList;
+      clearNode(list);
+
+      const head = document.createElement('div');
+      head.className = 'listHeader';
+      head.innerHTML = '<div></div><div>Group Desc</div><div style="text-align:right;">Rows</div>';
+      list.appendChild(head);
+
+      if (!state.stock.fileName || !state.stock.groupCounts.size) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = '<div></div><div class="muted">Load a stock file to see Group Desc values.</div><div></div>';
+        list.appendChild(row);
+        return;
+      }
+
+      let shown = 0;
+      for (const [g, cnt] of state.stock.groupCounts.entries()) {
+        if (q && !normalizeKey(g).includes(q)) continue;
+        shown++;
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const cbWrap = document.createElement('div');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = state.stock.groupSelected.get(g) !== false;
+        cb.addEventListener('change', () => {
+          state.stock.groupSelected.set(g, cb.checked);
+          scheduleAuditRun();
+        });
+        cbWrap.appendChild(cb);
+
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = g;
+
+        const c = document.createElement('div');
+        c.className = 'count';
+        c.textContent = String(cnt);
+
+        row.appendChild(cbWrap);
+        row.appendChild(name);
+        row.appendChild(c);
+        list.appendChild(row);
+      }
+
+      if (shown === 0) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = '<div></div><div class="muted">No Group Desc values match the current search.</div><div></div>';
+        list.appendChild(row);
+      }
+    }
+
+    function getFilteredStockRows() {
+      const rows = state.stock.rows || [];
+      const gIdx = state.audit.stockGroupIdx;
+      const out = [];
+      for (const r of rows) {
+        // Date filter first
+        if (!rowPassesDateFilter(r)) continue;
+
+        // Group filter
+        if (gIdx !== -1 && state.stock.groupSelected && state.stock.groupSelected.size) {
+          const g = safeCell(r, gIdx);
+          if (!g) continue;
+          if (state.stock.groupSelected.get(g) === false) continue;
+        }
+        out.push(r);
+      }
+      return out;
+    }
+
+    // -----------------------------
+    // Vault: indexes & filetype summary
+    // -----------------------------
+    function computeGroupCountsGeneric(rows, idx) {
+      const counts = new Map();
+      if (idx === -1) return counts;
+      for (const r of rows) {
+        const key = String((r[idx] ?? '')).trim();
         if (!key) continue;
         counts.set(key, (counts.get(key) || 0) + 1);
       }
@@ -1296,7 +1213,7 @@
         return;
       }
 
-      const counts = computeGroupCounts(state.vault.rows, ftIdx);
+      const counts = computeGroupCountsGeneric(state.vault.rows, ftIdx);
       if (!counts.size) {
         const row = document.createElement('div');
         row.className = 'row';
@@ -1325,332 +1242,854 @@
       }
     }
 
-    function renderGroupList() {
-      const counts = state.stock.groupCounts;
-      const selected = state.stock.groupSelected;
-      const q = String(el.groupSearch.value || '').trim().toLowerCase();
+    function updateAuditMappings() {
+      state.audit.stockMatchIdx = findColumnIndex(state.stock.headers, state.audit.stockMatchCol || '');
+      state.audit.stockGroupIdx = findColumnIndex(state.stock.headers, 'Group Desc');
+      state.audit.stockDescIdx = findColumnIndex(state.stock.headers, 'Part Desc');
+      state.audit.stockMoveDateIdx = findColumnIndex(state.stock.headers, 'Last Movement Date');
 
-      clearNode(el.groupList);
+      state.audit.vaultMatchIdx = findColumnIndex(state.vault.headers, state.audit.vaultMatchCol || '');
+      state.audit.vaultTypeIdx = findColumnIndex(state.vault.headers, 'Filetype');
+      state.audit.vaultStateIdx = findColumnIndex(state.vault.headers, 'State');
+      state.audit.vaultTitleIdx = findColumnIndex(state.vault.headers, 'Title');
+    }
 
-      const header = document.createElement('div');
-      header.className = 'listHeader';
-      header.innerHTML = '<div></div><div>Group Desc</div><div style="text-align:right;">Rows</div>';
-      el.groupList.appendChild(header);
+    // Normalize any path-ish string to a base filename (no directories)
+    function stripPath(nameVal) {
+      const s = String(nameVal || '').trim();
+      const unified = s.split('\\\\').join('/');
+      const parts = unified.split('/');
+      return parts.length ? parts[parts.length - 1] : unified;
+    }
 
-      if (!counts || counts.size === 0) {
-        const row = document.createElement('div');
-        row.className = 'row';
-        row.innerHTML = '<div></div><div class="muted">No Group Desc values found.</div><div></div>';
-        el.groupList.appendChild(row);
+    function baseNameFromAny(nameVal) {
+      const just = stripPath(nameVal);
+      const low = just.toLowerCase();
+      const dot = low.lastIndexOf('.');
+      return (dot > 0 ? low.slice(0, dot) : low);
+    }
+
+    function detectExt(filetypeVal, nameVal) {
+      const t = String(filetypeVal || '').toLowerCase();
+      const n = String(nameVal || '').toLowerCase();
+      const exts = ['.idw', '.pdf', '.ipt', '.iam'];
+      for (const e of exts) {
+        if (t.includes(e)) return e;
+        if (n.endsWith(e)) return e;
+      }
+      return '';
+    }
+
+    function buildVaultIndex() {
+      state.audit.vaultIndex = new Map();
+      if (!state.vault.rows.length) return;
+      updateAuditMappings();
+
+      const mIdx = state.audit.vaultMatchIdx;
+      const tIdx = state.audit.vaultTypeIdx;
+      const sIdx = state.audit.vaultStateIdx;
+
+      for (const r of state.vault.rows) {
+        const key = normalizeKey(safeCell(r, mIdx));
+        if (!key) continue;
+        const nameVal = safeCell(r, mIdx);
+        const typeVal = safeCell(r, tIdx);
+        const stateVal = safeCell(r, sIdx);
+        const ext = detectExt(typeVal, nameVal);
+        const base = baseNameFromAny(nameVal);
+        const entry = { key, name: nameVal, base, ext, filetype: String(typeVal || ''), state: String(stateVal || ''), row: r };
+        if (!state.audit.vaultIndex.has(key)) state.audit.vaultIndex.set(key, []);
+        state.audit.vaultIndex.get(key).push(entry);
+      }
+    }
+
+    // -----------------------------
+    // Fuzzy: Title matching
+    // -----------------------------
+    const STOPWORDS = new Set([
+      'a','an','and','are','as','at','be','but','by','for','from','has','have','if','in','into','is','it','its','of','on','or','s','such','t','that','the','their','then','there','these','they','this','to','was','will','with'
+    ]);
+
+    function tokenizeLoose(s) {
+      const text = String(s || '').toLowerCase();
+      const raw = text.split(/[^a-z0-9]+/g).filter(Boolean);
+      const out = [];
+
+      const splitMixed = (tok) => {
+        // Keep short letter+digits identifiers intact (e.g., m12, d10, ab123)
+        if (/^[a-z]{1,3}\d{1,6}$/.test(tok)) return [tok];
+
+        // Split number+letters suffix (e.g., 150mm -> 150, mm)
+        if (/^\d{1,8}[a-z]{1,4}$/.test(tok)) {
+          const m = tok.match(/^(\d{1,8})([a-z]{1,4})$/);
+          return m ? [m[1], m[2]] : [tok];
+        }
+
+        // General split at letter<->digit boundaries
+        const withBars = tok.replace(/([a-z])([0-9])/g, '$1|$2').replace(/([0-9])([a-z])/g, '$1|$2');
+        return withBars.split('|').filter(Boolean);
+      };
+
+      for (const chunk of raw) {
+        const parts = splitMixed(chunk);
+        for (const tok of parts) {
+          if (tok.length < 3) continue;
+          if (STOPWORDS.has(tok)) continue;
+          out.push(tok);
+        }
+      }
+      return out;
+    }
+
+    function jaccard(aSet, bSet) {
+      let inter = 0;
+      for (const x of aSet) if (bSet.has(x)) inter++;
+      const union = aSet.size + bSet.size - inter;
+      return union ? inter / union : 0;
+    }
+
+    // Conservative defaults
+    const FUZZY_MIN_SHARED_TOKENS = 4;
+    const FUZZY_MIN_JACCARD = 0.50;
+
+    function buildTitleIndex() {
+      state.audit.titleTokenIndex = new Map();
+      state.audit.titleToEntries = new Map();
+      if (!state.vault.rows.length) return;
+      updateAuditMappings();
+
+      const titleIdx = state.audit.vaultTitleIdx;
+      const tIdx = state.audit.vaultTypeIdx;
+      const sIdx = state.audit.vaultStateIdx;
+      if (titleIdx === -1) return;
+
+      for (const r of state.vault.rows) {
+        const titleRaw = safeCell(r, titleIdx);
+        const titleKey = normalizeKey(titleRaw);
+        if (!titleKey) continue;
+
+        const typeVal = safeCell(r, tIdx);
+        const stateVal = safeCell(r, sIdx);
+
+        const ext = detectExt(typeVal, titleRaw);
+        const base = baseNameFromAny(titleRaw);
+
+        const entry = { key: titleKey, name: titleRaw, base, ext, filetype: String(typeVal || ''), state: String(stateVal || ''), row: r };
+
+        if (!state.audit.titleToEntries.has(titleKey)) state.audit.titleToEntries.set(titleKey, []);
+        state.audit.titleToEntries.get(titleKey).push(entry);
+
+        const toks = unique(tokenizeLoose(titleRaw));
+        for (const tok of toks) {
+          if (!state.audit.titleTokenIndex.has(tok)) state.audit.titleTokenIndex.set(tok, new Set());
+          state.audit.titleTokenIndex.get(tok).add(titleKey);
+        }
+      }
+    }
+
+    function findBestTitleMatch(stockDesc, opts = null) {
+      const cfg = {
+        minSharedTokens: FUZZY_MIN_SHARED_TOKENS,
+        minJaccard: FUZZY_MIN_JACCARD,
+        ...(opts || {})
+      };
+
+      const toks = unique(tokenizeLoose(stockDesc));
+      if (toks.length === 0) return { titleKey: null, score: 0, shared: 0 };
+
+      const candidateCounts = new Map();
+      for (const tok of toks) {
+        const set = state.audit.titleTokenIndex.get(tok);
+        if (!set) continue;
+        for (const titleKey of set) {
+          candidateCounts.set(titleKey, (candidateCounts.get(titleKey) || 0) + 1);
+        }
+      }
+
+      let bestKey = null;
+      let bestShared = 0;
+      let bestScore = 0;
+
+      const aSet = new Set(toks);
+
+      for (const [titleKey, shared] of candidateCounts.entries()) {
+        if (shared < cfg.minSharedTokens) continue;
+        const entries = state.audit.titleToEntries.get(titleKey);
+        if (!entries || entries.length === 0) continue;
+        const titleText = entries[0].name;
+        const bSet = new Set(unique(tokenizeLoose(titleText)));
+        const score = jaccard(aSet, bSet);
+        if (score > bestScore || (score === bestScore && shared > bestShared)) {
+          bestKey = titleKey;
+          bestShared = shared;
+          bestScore = score;
+        }
+      }
+
+      if (!bestKey) return { titleKey: null, score: 0, shared: 0 };
+      if (bestShared < cfg.minSharedTokens) return { titleKey: null, score: 0, shared: 0 };
+      if (bestScore < cfg.minJaccard) return { titleKey: null, score: 0, shared: 0 };
+      return { titleKey: bestKey, score: bestScore, shared: bestShared };
+    }
+
+    // -----------------------------
+    // Audit classification
+    // -----------------------------
+    function isReleasedState(stateVal) {
+      return normalizeHeader(stateVal) === 'released';
+    }
+
+    function isFolderType(typeVal) {
+      return normalizeHeader(typeVal) === normalizeHeader('Folder (Folder)');
+    }
+
+    function classifyStockRow(vaultMatches, stockKeyBase) {
+      if (!vaultMatches || vaultMatches.length === 0) return 'missing';
+
+      const hasFolder = vaultMatches.some(v => isFolderType(v.filetype));
+      const hasNonFolder = vaultMatches.some(v => !isFolderType(v.filetype));
+      if (hasFolder && !hasNonFolder) return 'folder';
+
+      const idws = vaultMatches.filter(v => v.ext === '.idw');
+      if (idws.length) {
+        const anyRel = idws.some(v => isReleasedState(v.state));
+        return anyRel ? 'released' : 'unreleased';
+      }
+
+      if (vaultMatches.some(v => v.ext === '.pdf')) return 'pdf';
+
+      const models = vaultMatches.filter(v => v.ext === '.ipt' || v.ext === '.iam');
+      if (models.length) {
+        const base = stockKeyBase || '';
+        const anyIdwSameBase = vaultMatches.some(v => v.ext === '.idw' && v.base === base);
+        if (!anyIdwSameBase) return 'modelled';
+      }
+
+      return 'missing';
+    }
+
+    function resetCounts() {
+      state.audit.counts = {
+        released: 0,
+        unreleased: 0,
+        pdf: 0,
+        modelled: 0,
+        folder: 0,
+        missing: 0,
+        totalConsidered: 0,
+      };
+    }
+
+    function resetReview() {
+      state.audit.review.items = [];
+      state.audit.review.cursor = 0;
+      // keep decisions map across runs unless you want it reset; for now keep it.
+      // state.audit.review.decisions = new Map();
+    }
+
+    function setReviewStatus(text, kind='muted') {
+      if (!el.reviewStatus) return;
+      el.reviewStatus.textContent = text;
+      el.reviewStatus.className = 'pill ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : kind === 'error' ? 'error' : '');
+    }
+
+    function reviewKey(item) {
+      // Stable-ish key: stock part code + matched title + rule
+      return `${normalizeKey(item.partCode)}|${normalizeKey(item.title)}|${item.rule}`;
+    }
+
+    function ensureReviewVisibility() {
+      const anyRule = !!state.audit.useDescTitleRule || !!state.audit.useDescTitleTunableRule;
+      const hasItems = state.audit.review.items.length > 0;
+      if (!el.reviewCard) return;
+
+      if (!anyRule) {
+        el.reviewCard.style.display = 'none';
         return;
       }
 
-      let visible = 0;
-      for (const [name, count] of counts.entries()) {
-        if (q && !name.toLowerCase().includes(q)) continue;
-        visible++;
+      el.reviewCard.style.display = 'block';
 
-        const row = document.createElement('div');
-        row.className = 'row';
+      if (!hasItems) {
+        setReviewStatus('No fuzzy matches', 'warn');
+        el.reviewHint.textContent = 'Part Desc ↔ Title rules are enabled, but no matches were produced in the last run.';
+        el.reviewNext.disabled = true;
+        clearNode(el.reviewList);
+        const empty = document.createElement('div');
+        empty.className = 'hint muted';
+        empty.textContent = 'Nothing to review yet. Try loosening thresholds or running the audit on a wider filter set.';
+        el.reviewList.appendChild(empty);
+        return;
+      }
 
-        const cbWrap = document.createElement('div');
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = selected.get(name) !== false;
-        cb.addEventListener('change', () => {
-          selected.set(name, cb.checked);
-          scheduleAuditRun();
+      setReviewStatus('Ready', 'ok');
+      el.reviewNext.disabled = false;
+    }
+
+    function renderReviewBatch() {
+      ensureReviewVisibility();
+      if (!el.reviewCard || el.reviewCard.style.display === 'none') return;
+
+      const items = state.audit.review.items;
+      const start = state.audit.review.cursor;
+      const end = Math.min(items.length, start + 10);
+
+      clearNode(el.reviewList);
+
+      const hdr = document.createElement('div');
+      hdr.className = 'hint';
+      hdr.textContent = `Showing ${start + 1}-${end} of ${items.length} fuzzy matches from the last audit run.`;
+      el.reviewList.appendChild(hdr);
+
+      for (let i = start; i < end; i++) {
+        const it = items[i];
+        const key = reviewKey(it);
+        const decision = state.audit.review.decisions.get(key) || null;
+
+        const card = document.createElement('div');
+        card.className = 'reviewItem';
+
+        const top = document.createElement('div');
+        top.className = 'reviewTop';
+
+        const left = document.createElement('div');
+        left.style.display = 'flex';
+        left.style.gap = '10px';
+        left.style.flexWrap = 'wrap';
+        left.style.alignItems = 'center';
+
+        const b1 = document.createElement('div');
+        b1.className = 'badge';
+        b1.textContent = `${it.rule} • shared ${it.shared} • Jaccard ${it.score.toFixed(2)}`;
+
+        const b2 = document.createElement('div');
+        b2.className = 'badge';
+        b2.textContent = `Part Code: ${it.partCode}`;
+
+        left.appendChild(b1);
+        left.appendChild(b2);
+
+        const right = document.createElement('div');
+        right.className = 'reviewBtns';
+
+        const approve = document.createElement('button');
+        approve.className = 'good';
+        approve.textContent = 'Approve';
+        approve.disabled = !!decision;
+        approve.addEventListener('click', () => {
+          state.audit.review.decisions.set(key, 'approved');
+          renderReviewBatch();
         });
-        cbWrap.appendChild(cb);
 
-        const label = document.createElement('div');
-        label.className = 'name';
-        label.textContent = name;
+        const flag = document.createElement('button');
+        flag.className = 'bad';
+        flag.textContent = 'False positive';
+        flag.disabled = !!decision;
+        flag.addEventListener('click', () => {
+          state.audit.review.decisions.set(key, 'flagged');
+          renderReviewBatch();
+        });
 
-        const c = document.createElement('div');
-        c.className = 'count';
-        c.textContent = String(count);
-
-        row.appendChild(cbWrap);
-        row.appendChild(label);
-        row.appendChild(c);
-        el.groupList.appendChild(row);
-      }
-
-      if (visible === 0) {
-        const row = document.createElement('div');
-        row.className = 'row';
-        row.innerHTML = '<div></div><div class="muted">No matches for that search.</div><div></div>';
-        el.groupList.appendChild(row);
-      }
-    }
-
-    function setGroupControlsEnabled(on) {
-      el.groupSearch.disabled = !on;
-      el.selectAll.disabled = !on;
-      el.selectNone.disabled = !on;
-      el.selectDefault.disabled = !on;
-    }
-
-    // -----------------------------
-    // Date filtering
-    // -----------------------------
-    function setDateControlsEnabled(on, hasDateCol) {
-      const enable = !!on && !!hasDateCol;
-      el.f6m.disabled = !enable;
-      el.f12m.disabled = !enable;
-      el.fcustom.disabled = !enable;
-
-      const customOn = enable && el.fcustom.checked;
-      el.fStart.disabled = !customOn;
-      el.fEnd.disabled = !customOn;
-
-      if (!on) {
-        el.fMeta.textContent = 'Load a stock file to enable date filtering.';
-      } else if (!hasDateCol) {
-        el.fMeta.textContent = 'Column "Last Movement Date" not found — date filtering is unavailable.';
-      } else {
-        el.fMeta.textContent = state.stock.dateFilter.mode === 'none' ? 'No date filter applied.' : 'Date filter applied.';
-      }
-    }
-
-    function excelSerialToDate(n) {
-      const ms = (Number(n) - 25569) * 86400 * 1000;
-      const d = new Date(ms);
-      return isNaN(d.getTime()) ? null : d;
-    }
-
-    function parseLooseDate(v) {
-      if (v == null || v === '') return null;
-      if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
-      if (typeof v === 'number' && isFinite(v)) {
-        if (v > 59 && v < 60000) return excelSerialToDate(v);
-        return null;
-      }
-
-      const s = String(v).trim();
-      if (!s) return null;
-
-      const iso = new Date(s);
-      if (!isNaN(iso.getTime())) return iso;
-
-      const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})(?:\s+.*)?$/);
-      if (m) {
-        let dd = Number(m[1]);
-        let mm = Number(m[2]);
-        let yy = Number(m[3]);
-        if (yy < 100) yy += 2000;
-        const d = new Date(Date.UTC(yy, mm - 1, dd));
-        return isNaN(d.getTime()) ? null : d;
-      }
-      return null;
-    }
-
-    function startOfDayUTC(d) {
-      return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
-    }
-
-    function toDateInputValue(d) {
-      const yyyy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    }
-
-    function monthsAgo(date, months) {
-      const d = new Date(date);
-      d.setMonth(d.getMonth() - months);
-      return d;
-    }
-
-    function applyStockDateFilter() {
-      const df = state.stock.dateFilter;
-      const raw = state.stock.rawRows || [];
-
-      if (df.mode === 'none' || df.dateIdx === -1) {
-        state.stock.rows = raw;
-        return { kept: raw.length, skippedBadDates: 0, total: raw.length };
-      }
-
-      let start = df.start ? new Date(df.start) : null;
-      let end = df.end ? new Date(df.end) : null;
-
-      if (df.mode === '6m') {
-        end = new Date();
-        start = monthsAgo(end, 6);
-      } else if (df.mode === '12m') {
-        end = new Date();
-        start = monthsAgo(end, 12);
-      }
-
-      if (start) start = startOfDayUTC(start);
-      if (end) end = startOfDayUTC(end);
-
-      const kept = [];
-      let bad = 0;
-
-      for (const r of raw) {
-        const d = parseLooseDate(r[df.dateIdx]);
-        if (!d) { bad++; continue; }
-        const du = startOfDayUTC(d);
-        if (start && du < start) continue;
-        if (end && du > end) continue;
-        kept.push(r);
-      }
-
-      state.stock.rows = kept;
-      return { kept: kept.length, skippedBadDates: bad, total: raw.length };
-    }
-
-    function recomputeStockGroupSummary() {
-      const headers = state.stock.headers;
-      const rows = state.stock.rows;
-
-      const groupIdx = findColumnIndex(headers, 'Group Desc');
-      if (groupIdx === -1) {
-        state.stock.groupCounts = new Map();
-        state.stock.groupSelected = new Map();
-        setGroupControlsEnabled(false);
-        renderGroupList();
-        return { hasGroup: false };
-      }
-
-      state.stock.groupCounts = computeGroupCounts(rows, groupIdx);
-
-      const nextSelected = new Map();
-      for (const k of state.stock.groupCounts.keys()) {
-        nextSelected.set(k, state.stock.groupSelected.get(k) !== false);
-      }
-      state.stock.groupSelected = nextSelected;
-
-      setGroupControlsEnabled(true);
-      renderGroupList();
-      return { hasGroup: true, unique: state.stock.groupCounts.size };
-    }
-
-    function setDateFilterMode(mode) {
-      state.stock.dateFilter.mode = mode;
-
-      el.f6m.checked = mode === '6m';
-      el.f12m.checked = mode === '12m';
-      el.fcustom.checked = mode === 'custom';
-
-      const hasDateCol = state.stock.dateFilter.dateIdx !== -1;
-      const enable = !!state.stock.fileName && hasDateCol;
-      el.fStart.disabled = !(enable && mode === 'custom');
-      el.fEnd.disabled = !(enable && mode === 'custom');
-
-      if (enable && mode === 'custom') {
-        const today = new Date();
-        if (!el.fEnd.value) el.fEnd.value = toDateInputValue(today);
-        if (!el.fStart.value) el.fStart.value = toDateInputValue(monthsAgo(today, 6));
-      }
-
-      setDateControlsEnabled(!!state.stock.fileName, hasDateCol);
-
-      if (state.stock.fileName) {
-        const info = applyStockDateFilter();
-        recomputeStockGroupSummary();
-
-        const modeLabel = (mode === 'none') ? 'No date filter'
-          : (mode === '6m') ? 'Last 6 months'
-          : (mode === '12m') ? 'Last 12 months'
-          : 'Custom';
-
-        const badTxt = info.skippedBadDates ? ` (${info.skippedBadDates} rows skipped: unparseable dates)` : '';
-
-        el.fMeta.textContent = `${modeLabel}. Showing ${info.kept.toLocaleString()} of ${info.total.toLocaleString()} rows${badTxt}.`;
-
-        if (state.stock._sheetName) {
-          setStatus('stock', `Loaded (${state.stock._sheetName}) — ${info.kept.toLocaleString()} rows`, 'ok');
+        if (decision) {
+          const d = document.createElement('div');
+          d.className = 'decision ' + (decision === 'approved' ? 'approved' : 'flagged');
+          d.textContent = decision === 'approved' ? 'Approved' : 'Flagged as false positive';
+          right.appendChild(d);
+        } else {
+          right.appendChild(approve);
+          right.appendChild(flag);
         }
 
-        scheduleAuditRun();
+        top.appendChild(left);
+        top.appendChild(right);
+        card.appendChild(top);
+
+        const tokSet = it.tokens || new Set();
+
+        const a = document.createElement('div');
+        a.innerHTML = `<div class="reviewLabel">Stock Part Desc</div><div class="reviewText">${highlightTokensInText(it.partDesc, tokSet)}</div>`;
+
+        const b = document.createElement('div');
+        b.innerHTML = `<div class="reviewLabel">Vault Title (matched)</div><div class="reviewText">${highlightTokensInText(it.title, tokSet)}</div>`;
+
+        const c = document.createElement('div');
+        c.className = 'hint muted';
+        const toks = Array.from(tokSet).sort();
+        c.textContent = toks.length ? `Matched tokens: ${toks.join(', ')}` : 'Matched tokens: (none)';
+
+        card.appendChild(a);
+        card.appendChild(b);
+        card.appendChild(c);
+
+        el.reviewList.appendChild(card);
+      }
+
+      el.reviewNext.disabled = (end >= items.length);
+    }
+
+    function renderAuditCounts() {
+      const c = state.audit.counts;
+      const rows = [
+        { key: 'released', label: 'Released', sub: 'Filetype .idw and State = Released' },
+        { key: 'unreleased', label: 'Unreleased', sub: 'Filetype .idw and State ≠ Released' },
+        { key: 'pdf', label: 'Only PDF located', sub: 'Filetype .pdf' },
+        { key: 'modelled', label: 'Modelled', sub: 'Filetype .ipt/.iam and no .idw' },
+        { key: 'folder', label: 'Folder', sub: 'Only Folder (Folder) exists' },
+        { key: 'missing', label: 'Missing', sub: 'No matching Vault row found' },
+      ];
+      el.auditRows.innerHTML = '';
+      for (const r of rows) {
+        const div = document.createElement('div');
+        div.className = 'auditRow';
+        div.innerHTML = '<div class="cat">' + r.label + '<span class="subtxt">' + r.sub + '</span></div>' +
+                        '<div class="num">' + Number(c[r.key] || 0).toLocaleString() + '</div>';
+        el.auditRows.appendChild(div);
       }
     }
 
-    function syncCustomDatesToState() {
-      if (state.stock.dateFilter.mode !== 'custom') return;
-      state.stock.dateFilter.start = el.fStart.value ? new Date(el.fStart.value) : null;
-      state.stock.dateFilter.end = el.fEnd.value ? new Date(el.fEnd.value) : null;
+    let _auditTimer = null;
+    function scheduleAuditRun() {
+      if (_auditTimer) clearTimeout(_auditTimer);
+      _auditTimer = setTimeout(runAuditNow, 150);
+    }
 
-      const info = applyStockDateFilter();
-      recomputeStockGroupSummary();
-
-      const badTxt = info.skippedBadDates ? ` (${info.skippedBadDates} rows skipped: unparseable dates)` : '';
-      el.fMeta.textContent = `Custom. Showing ${info.kept.toLocaleString()} of ${info.total.toLocaleString()} rows${badTxt}.`;
-
-      if (state.stock._sheetName) {
-        setStatus('stock', `Loaded (${state.stock._sheetName}) — ${info.kept.toLocaleString()} rows`, 'ok');
+    function runAuditNow() {
+      // Requirements: both files loaded
+      if (!state.stock.fileName || !state.vault.fileName) {
+        setAuditStatus('Waiting for files', 'warn');
+        el.auditHint.textContent = 'Load both files to compute results.';
+        resetCounts();
+        renderAuditCounts();
+        return;
       }
+
+      updateAuditMappings();
+
+      // Vault must have Filetype and State columns.
+      if (state.audit.vaultTypeIdx === -1 || state.audit.vaultStateIdx === -1) {
+        setAuditStatus('Vault export unexpected', 'error');
+        el.auditHint.textContent = 'Vault export is missing required columns: Filetype and/or State.';
+        log('Vault export is missing required columns. Expected headers: "Filetype" and "State".', 'error');
+        return;
+      }
+
+      // Determine match columns
+      if (state.audit.useDefaultMatchRule) {
+        state.audit.stockMatchCol = 'Part Code';
+        state.audit.vaultMatchCol = 'Stock Number';
+        updateAuditMappings();
+      }
+
+      if (state.audit.stockMatchIdx === -1 || state.audit.vaultMatchIdx === -1) {
+        setAuditStatus('Missing required match columns', 'error');
+        el.auditHint.textContent = 'Cannot run: match column(s) missing.';
+        return;
+      }
+
+      // Build indexes
+      buildVaultIndex();
+      if (state.audit.useDescTitleRule || state.audit.useDescTitleTunableRule) buildTitleIndex();
+
+      const filteredStock = getFilteredStockRows();
+      resetCounts();
+      resetReview();
+
+      let fuzzyUsed = 0;
+      let fuzzyUsedTunable = 0;
+
+      for (const r of filteredStock) {
+        const stockKey = normalizeKey(safeCell(r, state.audit.stockMatchIdx));
+        if (!stockKey) continue;
+
+        let matches = state.audit.vaultIndex.get(stockKey) || [];
+
+        // Secondary fuzzy (conservative)
+        if ((!matches || matches.length === 0) && state.audit.useDescTitleRule && state.audit.stockDescIdx !== -1) {
+          const desc = safeCell(r, state.audit.stockDescIdx);
+          const best = findBestTitleMatch(desc);
+          if (best.titleKey) {
+            matches = state.audit.titleToEntries.get(best.titleKey) || [];
+            if (matches.length) {
+              fuzzyUsed++;
+              const titleText = (matches[0] && matches[0].name) ? matches[0].name : '';
+              const tokSet = overlapTokenSet(desc, titleText);
+              state.audit.review.items.push({
+                rule: 'Title match',
+                partCode: safeCell(r, state.audit.stockMatchIdx),
+                partDesc: desc,
+                title: titleText,
+                shared: best.shared,
+                score: best.score,
+                tokens: tokSet,
+              });
+            }
+          }
+        }
+
+        // Tertiary fuzzy (tunable)
+        if ((!matches || matches.length === 0) && state.audit.useDescTitleTunableRule && state.audit.stockDescIdx !== -1) {
+          const desc = safeCell(r, state.audit.stockDescIdx);
+          const best = findBestTitleMatch(desc, {
+            minSharedTokens: Number(state.audit.tunableMinSharedTokens) || FUZZY_MIN_SHARED_TOKENS,
+            minJaccard: Number(state.audit.tunableMinJaccard) || FUZZY_MIN_JACCARD,
+          });
+          if (best.titleKey) {
+            matches = state.audit.titleToEntries.get(best.titleKey) || [];
+            if (matches.length) {
+              fuzzyUsedTunable++;
+              const titleText = (matches[0] && matches[0].name) ? matches[0].name : '';
+              const tokSet = overlapTokenSet(desc, titleText);
+              state.audit.review.items.push({
+                rule: 'Tunable match',
+                partCode: safeCell(r, state.audit.stockMatchIdx),
+                partDesc: desc,
+                title: titleText,
+                shared: best.shared,
+                score: best.score,
+                tokens: tokSet,
+              });
+            }
+          }
+        }
+
+        const base = baseNameFromAny(stockKey);
+        const cat = classifyStockRow(matches, base);
+        state.audit.counts[cat] = (state.audit.counts[cat] || 0) + 1;
+        state.audit.counts.totalConsidered++;
+      }
+
+      renderAuditCounts();
+
+      // Review panel (only relevant if fuzzy rules enabled)
+      ensureReviewVisibility();
+      if (state.audit.review.items.length) {
+        state.audit.review.cursor = 0;
+        renderReviewBatch();
+      }
+
+      let extra = '';
+      if (state.audit.useDescTitleRule) extra += ` (Title matches used: ${fuzzyUsed.toLocaleString()})`;
+      if (state.audit.useDescTitleTunableRule) extra += ` (Tunable Title matches used: ${fuzzyUsedTunable.toLocaleString()})`;
+
+      setAuditStatus('Complete', 'ok');
+      el.auditHint.textContent = `Considered ${state.audit.counts.totalConsidered.toLocaleString()} stock rows after filters.${extra}`;
+    }
+
+    // -----------------------------
+    // Rules panel wiring
+    // -----------------------------
+    function buildSelectOptions(selectEl, headers, preferredHeader) {
+      selectEl.innerHTML = '';
+      for (const h of headers) {
+        const opt = document.createElement('option');
+        opt.value = h;
+        opt.textContent = h || '(blank)';
+        if (preferredHeader && normalizeHeader(h) === normalizeHeader(preferredHeader)) opt.selected = true;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    function refreshRulesAvailability() {
+      const hasStock = state.stock.headers.length > 0;
+      const hasVault = state.vault.headers.length > 0;
+      const ready = hasStock && hasVault;
+
+      el.toggleRules.disabled = !ready;
+      el.runAudit.disabled = !ready;
+
+      if (!ready) return;
+
+      updateAuditMappings();
+
+      // Validate fixed vault columns
+      const fixedTypeIdx = findColumnIndex(state.vault.headers, 'Filetype');
+      const fixedStateIdx = findColumnIndex(state.vault.headers, 'State');
+      if (fixedTypeIdx === -1 || fixedStateIdx === -1) {
+        setAuditStatus('Vault export unexpected', 'error');
+        el.runAudit.disabled = true;
+        log('Vault export is missing required columns. Expected headers: "Filetype" and "State".', 'error');
+      }
+
+      // Populate manual drop-downs
+      buildSelectOptions(el.stockMatchCol, state.stock.headers, state.audit.stockMatchCol);
+      buildSelectOptions(el.vaultMatchCol, state.vault.headers, state.audit.vaultMatchCol);
+
+      // Enable/disable manual grid based on default toggle
+      const useDefault = !!el.defaultMatchToggle.checked;
+      state.audit.useDefaultMatchRule = useDefault;
+      el.stockMatchCol.disabled = useDefault;
+      el.vaultMatchCol.disabled = useDefault;
+
+      if (useDefault) {
+        state.audit.stockMatchCol = 'Part Code';
+        state.audit.vaultMatchCol = 'Stock Number';
+      } else {
+        state.audit.stockMatchCol = el.stockMatchCol.value || state.audit.stockMatchCol;
+        state.audit.vaultMatchCol = el.vaultMatchCol.value || state.audit.vaultMatchCol;
+      }
+
+      // Desc↔Title prerequisites
+      const canUseDescTitle = (findColumnIndex(state.stock.headers, 'Part Desc') !== -1) && (findColumnIndex(state.vault.headers, 'Title') !== -1);
+      el.descTitleToggle.disabled = !canUseDescTitle;
+      el.descTitleTunableToggle.disabled = !canUseDescTitle;
+      if (!canUseDescTitle) {
+        el.descTitleToggle.checked = false;
+        el.descTitleTunableToggle.checked = false;
+        state.audit.useDescTitleRule = false;
+        state.audit.useDescTitleTunableRule = false;
+      } else {
+        state.audit.useDescTitleRule = !!el.descTitleToggle.checked;
+        state.audit.useDescTitleTunableRule = !!el.descTitleTunableToggle.checked;
+      }
+
+      // Sync sliders
+      el.tunableTok.value = String(state.audit.tunableMinSharedTokens);
+      el.tunableJac.value = String(state.audit.tunableMinJaccard);
+      el.tunableTokVal.textContent = String(state.audit.tunableMinSharedTokens);
+      el.tunableJacVal.textContent = Number(state.audit.tunableMinJaccard).toFixed(2);
+      el.tunableControls.style.display = state.audit.useDescTitleTunableRule ? 'grid' : 'none';
+
+      // Meta labels
+      el.defaultMatchMeta.textContent = useDefault
+        ? 'Active. Matching is exact after trimming and lowercasing (case-insensitive).'
+        : 'Off. Using manual match columns below.';
+
+      el.descTitleMeta.textContent = !canUseDescTitle
+        ? 'Unavailable. Requires Stock column "Part Desc" and Vault column "Title".'
+        : (state.audit.useDescTitleRule
+          ? `On. Using loose word match (min shared tokens ${FUZZY_MIN_SHARED_TOKENS}, min Jaccard ${FUZZY_MIN_JACCARD}).`
+          : 'Off. If enabled, rows that fail the default match will try a word-overlap match between Stock Part Desc and Vault Title.');
+
+      el.descTitleTunableMeta.textContent = !canUseDescTitle
+        ? 'Unavailable. Requires Stock column "Part Desc" and Vault column "Title".'
+        : (state.audit.useDescTitleTunableRule
+          ? `On. Using tunable loose word match (min shared tokens ${state.audit.tunableMinSharedTokens}, min Jaccard ${Number(state.audit.tunableMinJaccard).toFixed(2)}).`
+          : 'Off. If enabled, uses the sliders below to try to reduce false negatives (may increase false positives).');
 
       scheduleAuditRun();
     }
 
     // -----------------------------
-    // Lightweight self-tests (runs on load)
+    // Event handlers
+    // -----------------------------
+    el.toggleRules.addEventListener('click', () => {
+      const isOpen = el.rulesPanel.style.display !== 'none';
+      el.rulesPanel.style.display = isOpen ? 'none' : 'block';
+    });
+
+    el.defaultMatchToggle.addEventListener('change', () => {
+      refreshRulesAvailability();
+        ensureReviewVisibility();
+    });
+
+    el.stockMatchCol.addEventListener('change', () => {
+      if (state.audit.useDefaultMatchRule) return;
+      state.audit.stockMatchCol = el.stockMatchCol.value;
+      refreshRulesAvailability();
+    });
+
+    el.vaultMatchCol.addEventListener('change', () => {
+      if (state.audit.useDefaultMatchRule) return;
+      state.audit.vaultMatchCol = el.vaultMatchCol.value;
+      refreshRulesAvailability();
+    });
+
+    el.descTitleToggle.addEventListener('change', () => {
+      state.audit.useDescTitleRule = !!el.descTitleToggle.checked;
+      refreshRulesAvailability();
+    });
+
+    el.descTitleTunableToggle.addEventListener('change', () => {
+      state.audit.useDescTitleTunableRule = !!el.descTitleTunableToggle.checked;
+      el.tunableControls.style.display = state.audit.useDescTitleTunableRule ? 'grid' : 'none';
+      refreshRulesAvailability();
+    });
+
+    function onTunableChanged() {
+      state.audit.tunableMinSharedTokens = Number(el.tunableTok.value);
+      state.audit.tunableMinJaccard = Number(el.tunableJac.value);
+      el.tunableTokVal.textContent = String(state.audit.tunableMinSharedTokens);
+      el.tunableJacVal.textContent = Number(state.audit.tunableMinJaccard).toFixed(2);
+      if (state.audit.useDescTitleTunableRule) {
+        el.descTitleTunableMeta.textContent = `On. Using tunable loose word match (min shared tokens ${state.audit.tunableMinSharedTokens}, min Jaccard ${Number(state.audit.tunableMinJaccard).toFixed(2)}).`;
+      }
+      scheduleAuditRun();
+    }
+
+    el.tunableTok.addEventListener('input', onTunableChanged);
+    el.tunableJac.addEventListener('input', onTunableChanged);
+
+    // Review: pagination
+    if (el.reviewNext) {
+      el.reviewNext.addEventListener('click', () => {
+        const items = state.audit.review.items;
+        if (!items.length) return;
+        state.audit.review.cursor = Math.min(items.length, state.audit.review.cursor + 10);
+        if (state.audit.review.cursor >= items.length) {
+          state.audit.review.cursor = Math.max(0, items.length - 10);
+        }
+        renderReviewBatch();
+      });
+    }
+
+    el.runAudit.addEventListener('click', runAuditNow);
+
+    el.groupSearch.addEventListener('input', renderGroupList);
+
+    el.selectAll.addEventListener('click', () => {
+      for (const g of state.stock.groupSelected.keys()) state.stock.groupSelected.set(g, true);
+      renderGroupList();
+      scheduleAuditRun();
+    });
+
+    el.selectNone.addEventListener('click', () => {
+      for (const g of state.stock.groupSelected.keys()) state.stock.groupSelected.set(g, false);
+      renderGroupList();
+      scheduleAuditRun();
+    });
+
+    el.selectDefault.addEventListener('click', () => {
+      const out = applyDefaultGroupSelection();
+      renderGroupList();
+      log(`Default selection applied. ${out.selected} Group Desc values ticked.`, 'info');
+      scheduleAuditRun();
+    });
+
+    // Date filter events
+    el.f6m.addEventListener('change', () => setDateFilterMode(el.f6m.checked ? '6m' : 'none'));
+    el.f12m.addEventListener('change', () => setDateFilterMode(el.f12m.checked ? '12m' : 'none'));
+    el.fcustom.addEventListener('change', () => setDateFilterMode(el.fcustom.checked ? 'custom' : 'none'));
+    el.fStart.addEventListener('change', () => { updateDateFilterRange(); scheduleAuditRun(); });
+    el.fEnd.addEventListener('change', () => { updateDateFilterRange(); scheduleAuditRun(); });
+
+    // -----------------------------
+    // File loading
+    // -----------------------------
+    el.stockFile.addEventListener('change', async () => {
+      const file = el.stockFile.files && el.stockFile.files[0];
+      if (!file) return;
+
+      try {
+        setStatus('stock', 'Loading…', 'warn');
+        const { headers, rows, sheet } = await readXlsx(file);
+        state.stock.fileName = file.name;
+        state.stock.headers = headers;
+
+        // Option B: Only keep rows where Part Code is non-empty
+        const pcIdx = findColumnIndex(headers, 'Part Code');
+        const filtered = filterRowsByRequiredColumn(rows, pcIdx);
+        state.stock.rawRows = filtered.rows;
+        state.stock.rows = filtered.rows;
+
+        if (filtered.dropped) {
+          log(`Dropped ${filtered.dropped.toLocaleString()} stock rows with empty Part Code.`, 'info');
+        }
+
+        renderChips(el.stockHeaders, headers);
+
+        // Enable date controls
+        const dateIdx = findColumnIndex(headers, 'Last Movement Date');
+        el.f6m.disabled = (dateIdx === -1);
+        el.f12m.disabled = (dateIdx === -1);
+        el.fcustom.disabled = (dateIdx === -1);
+        el.fStart.disabled = true;
+        el.fEnd.disabled = true;
+        state.stock.dateFilter.mode = 'none';
+        el.f6m.checked = false;
+        el.f12m.checked = false;
+        el.fcustom.checked = false;
+        el.fStart.value = '';
+        el.fEnd.value = '';
+        el.fMeta.textContent = (dateIdx === -1)
+          ? 'Column "Last Movement Date" not found — date filtering unavailable.'
+          : 'No date filtering applied.';
+
+        // Group Desc summary
+        const gIdx = findColumnIndex(headers, 'Group Desc');
+        state.stock.groupCounts = computeCounts(state.stock.rows, gIdx);
+        rebuildGroupSelectionDefaultAll();
+
+        // Enable group UI
+        const hasGroups = state.stock.groupCounts.size > 0;
+        el.groupSearch.disabled = !hasGroups;
+        el.selectAll.disabled = !hasGroups;
+        el.selectNone.disabled = !hasGroups;
+        el.selectDefault.disabled = !hasGroups;
+
+        renderGroupList();
+
+        setStatus('stock', `Loaded (${sheet}) — ${state.stock.rows.length.toLocaleString()} rows`, 'ok');
+        log(`Stock file loaded. Headers: ${headers.length}. Rows (with Part Code): ${state.stock.rows.length}. Unique Group Desc: ${state.stock.groupCounts.size}.`, 'info');
+
+        refreshRulesAvailability();
+      } catch (e) {
+        console.error(e);
+        setStatus('stock', 'Failed to load', 'error');
+        log(`Failed to parse stock XLSX: ${e && e.message ? e.message : e}`, 'error');
+      }
+    });
+
+    el.vaultFile.addEventListener('change', async () => {
+      const file = el.vaultFile.files && el.vaultFile.files[0];
+      if (!file) return;
+
+      try {
+        setStatus('vault', 'Loading…', 'warn');
+        const { headers, rows, sheet } = await readXlsx(file);
+        state.vault.fileName = file.name;
+        state.vault.headers = headers;
+        state.vault.rows = rows;
+
+        renderChips(el.vaultHeaders, headers);
+        renderVaultFiletypeSummary();
+
+        setStatus('vault', `Loaded (${sheet}) — ${rows.length.toLocaleString()} rows`, 'ok');
+        log(`Vault file loaded. Headers: ${headers.length}. Rows: ${rows.length}.`, 'info');
+
+        refreshRulesAvailability();
+      } catch (e) {
+        console.error(e);
+        setStatus('vault', 'Failed to load', 'error');
+        log(`Failed to parse vault XLSX: ${e && e.message ? e.message : e}`, 'error');
+      }
+    });
+
+    // -----------------------------
+    // Self-tests
     // -----------------------------
     function runSelfTests() {
       const tests = [];
       const t = (name, fn) => tests.push({ name, fn });
-      const eq = (a, b) => String(a) === String(b);
 
-      // Backslashes must be escaped in JS string literals.
-      t('stripPath handles backslashes', () => eq(stripPath('C\\\\a\\\\b\\\\file.idw'), 'file.idw'));
-      t('stripPath trims whitespace', () => eq(stripPath('  C\\\\a\\\\b\\\\file.idw  '), 'file.idw'));
-      t('normalizeKey is case-insensitive', () => eq(normalizeKey('AbC123'), 'abc123'));
-      t('normalizeKey trims whitespace', () => eq(normalizeKey('  ABC123  '), 'abc123'));
-      t('stripPath handles slashes', () => eq(stripPath('a/b/c/file.pdf'), 'file.pdf'));
-      t('baseNameFromAny drops ext', () => eq(baseNameFromAny('a/b/Thing.IDW'), 'thing'));
-      t('detectExt finds idw in filetype', () => eq(detectExt('Autodesk Inventor Drawing (.idw)', 'Thing'), '.idw'));
-      t('detectExt finds pdf in name', () => eq(detectExt('', 'ABC.PDF'), '.pdf'));
+      t('stripPath handles backslashes', () => stripPath('C\\\\a\\\\b\\\\file.idw') === 'file.idw');
+      t('stripPath trims whitespace', () => stripPath('  C\\\\a\\\\b\\\\file.idw  ') === 'file.idw');
+      t('normalizeKey is case-insensitive', () => normalizeKey('AbC123') === 'abc123');
+      t('baseNameFromAny drops ext', () => baseNameFromAny('a/b/Thing.IDW') === 'thing');
+      t('detectExt finds idw in filetype', () => detectExt('Autodesk Inventor Drawing (.idw)', 'Thing') === '.idw');
+      t('detectExt finds pdf in name', () => detectExt('', 'ABC.PDF') === '.pdf');
+
       t('parseLooseDate parses dd/mm/yyyy', () => {
         const d = parseLooseDate('13/01/2026');
         return !!d && d.getUTCFullYear() === 2026;
       });
-      t('classifyStockRow released', () => {
-        const m = [{ ext: '.idw', state: 'Released', filetype: '.idw', base: 'x' }];
-        return classifyStockRow(m, 'x') === 'released';
-      });
-      t('classifyStockRow folder', () => {
-        const m = [{ ext: '', state: '', filetype: 'Folder (Folder)', base: '' }];
-        return classifyStockRow(m, '') === 'folder';
-      });
-      t('default group selection matches normalized names', () => {
-        const tmp = new Map([
-          ['Bolt Components', true],
-          ['bolt finished goods', true],
-          ['Not In List', true],
-          ['Tensioners,Footpumps & Com', true],
-        ]);
-        const prev = state.stock.groupSelected;
-        state.stock.groupSelected = tmp;
-        const out = applyDefaultGroupSelection();
-        const ok = out.selected === 3 && tmp.get('Not In List') === false;
-        state.stock.groupSelected = prev;
-        return ok;
-      });
+
       t('filterRowsByRequiredColumn drops empty Part Code rows', () => {
         const rows = [['A'], [''], ['  '], ['B']];
         const r = filterRowsByRequiredColumn(rows, 0);
         return r.rows.length === 2 && r.dropped === 2;
       });
-      t('computeGroupCounts counts and sorts desc', () => {
-        const rows = [['b'], ['a'], ['b'], ['c'], ['b']];
-        const m = computeGroupCounts(rows, 0);
-        const first = m.entries().next().value;
-        return first[0] === 'b' && first[1] === 3 && m.get('a') === 1;
-      });
-      t('tokenizeLoose drops stopwords/short tokens', () => {
+
+      t('tokenizeLoose keeps m12 and drops stopwords', () => {
         const toks = tokenizeLoose('The M12 bolt and nut');
         return toks.includes('m12') && toks.includes('bolt') && toks.includes('nut') && !toks.includes('the') && !toks.includes('and');
       });
+
       t('tokenizeLoose splits mixed alphanumerics', () => {
         const toks = tokenizeLoose('Plate 150mm wide');
-        return toks.includes('150') && toks.includes('wide') && toks.includes('plate') && !toks.includes('mm');
+        return toks.includes('plate') && toks.includes('150') && toks.includes('wide');
       });
+
       t('findBestTitleMatch picks obvious overlap', () => {
-        // Build a tiny fake title index
         const prevTok = state.audit.titleTokenIndex;
         const prevMap = state.audit.titleToEntries;
         state.audit.titleTokenIndex = new Map();
@@ -1675,7 +2114,7 @@
         return ok;
       });
 
-      t('findBestTitleMatch conservative threshold rejects weak overlap', () => {
+      t('findBestTitleMatch accepts looser thresholds when supplied', () => {
         const prevTok = state.audit.titleTokenIndex;
         const prevMap = state.audit.titleToEntries;
         state.audit.titleTokenIndex = new Map();
@@ -1690,256 +2129,48 @@
           }
         };
         addTitle('Hydraulic Hose Kit');
-        addTitle('Washer Flat Zinc Plated');
 
-        // Only 1-2 meaningful shared tokens expected -> should be rejected under conservative settings.
-        const best = findBestTitleMatch('Hydraulic kit');
-        const ok = !best.titleKey;
+        const best = findBestTitleMatch('Hydraulic kit', { minSharedTokens: 2, minJaccard: 0.20 });
+        const ok = !!best.titleKey;
 
         state.audit.titleTokenIndex = prevTok;
         state.audit.titleToEntries = prevMap;
         return ok;
       });
 
+      t('highlightTokensInText highlights only whole alnum tokens', () => {
+        const s = 'M12 bolt - bolt.';
+        const set = new Set(['m12','bolt']);
+        const out = highlightTokensInText(s, set);
+        return out.includes('<mark') && out.toLowerCase().includes('m12') && out.toLowerCase().includes('bolt');
+      });
+
       let pass = 0;
-      for (const tt of tests) {
+      for (const test of tests) {
         let ok = false;
-        try { ok = !!tt.fn(); } catch (e) { ok = false; }
-        if (ok) pass++;
-        else log('Self-test failed: ' + tt.name, 'warn');
-      }
-      log(`Self-tests: ${pass}/${tests.length} passed.`, pass === tests.length ? 'info' : 'warn');
-    }
-
-    // -----------------------------
-    // Handlers
-    // -----------------------------
-    el.stockFile.addEventListener('change', async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      setStatus('stock', 'Loading…', 'warn');
-      log(`Reading stock XLSX: ${file.name}`);
-
-      try {
-        const { headers, rows, sheet } = await readXlsx(file);
-        state.stock.fileName = file.name;
-        state.stock.headers = headers;
-
-        // Option B: keep only rows where Part Code is non-empty
-        const pcIdx0 = findColumnIndex(headers, 'Part Code');
-        const filtered0 = filterRowsByRequiredColumn(rows, pcIdx0);
-        state.stock.rawRows = filtered0.rows;
-        state.stock.rows = filtered0.rows;
-        state.stock._sheetName = sheet;
-
-        if (pcIdx0 === -1) {
-          log('Stock file: "Part Code" column not found — row filtering by Part Code is disabled.', 'warn');
-        } else if (filtered0.dropped) {
-          log(`Dropped ${filtered0.dropped.toLocaleString()} stock rows with empty Part Code.`, 'info');
+        try {
+          ok = !!test.fn();
+        } catch (e) {
+          ok = false;
         }
-
-        renderChips(el.stockHeaders, headers);
-
-        const dateIdx = findColumnIndex(headers, 'Last Movement Date');
-        state.stock.dateFilter.dateIdx = dateIdx;
-        setDateControlsEnabled(true, dateIdx !== -1);
-
-        const filterInfo = applyStockDateFilter();
-        if (dateIdx !== -1 && state.stock.dateFilter.mode === 'none') {
-          const badTxt = filterInfo.skippedBadDates ? ` (${filterInfo.skippedBadDates} rows skipped: unparseable dates)` : '';
-          el.fMeta.textContent = `No date filter applied. Showing ${filterInfo.kept.toLocaleString()} of ${filterInfo.total.toLocaleString()} rows${badTxt}.`;
-        }
-
-        const idx = findColumnIndex(headers, 'Group Desc');
-        if (idx === -1) {
-          state.stock.groupCounts = new Map();
-          state.stock.groupSelected = new Map();
-          setGroupControlsEnabled(false);
-          renderGroupList();
-          setStatus('stock', `Loaded (${sheet}) — Group Desc not found`, 'warn');
-          log('Stock file loaded, but could not find a column named "Group Desc".', 'warn');
-          scheduleAuditRun();
-          return;
-        }
-
-        state.stock.groupCounts = computeGroupCounts(state.stock.rows, idx);
-        state.stock.groupSelected = new Map();
-        for (const k of state.stock.groupCounts.keys()) state.stock.groupSelected.set(k, true);
-
-        setGroupControlsEnabled(true);
-        el.groupSearch.value = '';
-        renderGroupList();
-
-        setStatus('stock', `Loaded (${sheet}) — ${state.stock.rows.length.toLocaleString()} rows`, 'ok');
-        log(`Stock file loaded. Headers: ${headers.length}. Rows (with Part Code): ${state.stock.rows.length}. Unique Group Desc: ${state.stock.groupCounts.size}.`, 'info');
-
-        if (state.vault.headers.length) {
-          initRulesPanel();
-          scheduleAuditRun();
-        }
-      } catch (err) {
-        console.error(err);
-        setStatus('stock', 'Failed to load', 'error');
-        setGroupControlsEnabled(false);
-        log(`Failed to read stock XLSX: ${err?.message || String(err)}`, 'error');
-      }
-    });
-
-    el.vaultFile.addEventListener('change', async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      setStatus('vault', 'Loading…', 'warn');
-      log(`Reading vault XLSX: ${file.name}`);
-
-      try {
-        const { headers, rows, sheet } = await readXlsx(file);
-        state.vault.fileName = file.name;
-        state.vault.headers = headers;
-        state.vault.rows = rows;
-
-        renderChips(el.vaultHeaders, headers);
-        renderVaultFiletypeSummary();
-        setStatus('vault', `Loaded (${sheet}) — ${rows.length.toLocaleString()} rows`, 'ok');
-        log(`Vault file loaded. Headers: ${headers.length}. Rows: ${rows.length}.`, 'info');
-
-        if (state.stock.headers.length) {
-          initRulesPanel();
-          scheduleAuditRun();
-        }
-      } catch (err) {
-        console.error(err);
-        setStatus('vault', 'Failed to load', 'error');
-        log(`Failed to read vault XLSX: ${err?.message || String(err)}`, 'error');
-      }
-    });
-
-    el.groupSearch.addEventListener('input', () => renderGroupList());
-
-    el.selectAll.addEventListener('click', () => {
-      for (const k of state.stock.groupSelected.keys()) state.stock.groupSelected.set(k, true);
-      renderGroupList();
-      scheduleAuditRun();
-      log('Selected all Group Desc.', 'info');
-    });
-
-    el.selectNone.addEventListener('click', () => {
-      for (const k of state.stock.groupSelected.keys()) state.stock.groupSelected.set(k, false);
-      renderGroupList();
-      scheduleAuditRun();
-      log('Selected none of Group Desc.', 'info');
-    });
-
-    el.selectDefault.addEventListener('click', () => {
-      const info = applyDefaultGroupSelection();
-      renderGroupList();
-      scheduleAuditRun();
-      log(`Applied default Group Desc selection (${info.selected}/${info.total} ticked).`, 'info');
-    });
-
-    el.f6m.addEventListener('change', () => {
-      if (el.f6m.checked) setDateFilterMode('6m');
-      else if (state.stock.dateFilter.mode === '6m') setDateFilterMode('none');
-    });
-
-    el.f12m.addEventListener('change', () => {
-      if (el.f12m.checked) setDateFilterMode('12m');
-      else if (state.stock.dateFilter.mode === '12m') setDateFilterMode('none');
-    });
-
-    el.fcustom.addEventListener('change', () => {
-      if (el.fcustom.checked) setDateFilterMode('custom');
-      else if (state.stock.dateFilter.mode === 'custom') setDateFilterMode('none');
-    });
-
-    el.fStart.addEventListener('change', syncCustomDatesToState);
-    el.fEnd.addEventListener('change', syncCustomDatesToState);
-
-    // Audit UI init + rules events
-    renderAuditCounts();
-    setAuditStatus('Waiting for files', 'warn');
-    renderVaultFiletypeSummary();
-
-    if (el.toggleRules) {
-      el.toggleRules.addEventListener('click', () => {
-        el.rulesPanel.style.display = (el.rulesPanel.style.display === 'none') ? 'block' : 'none';
-      });
-    }
-
-    if (el.defaultMatchToggle) {
-      el.defaultMatchToggle.addEventListener('change', () => {
-        state.audit.useDefaultMatchRule = !!el.defaultMatchToggle.checked;
-
-        if (state.audit.useDefaultMatchRule) {
-          state.audit.stockMatchCol = 'Part Code';
-          state.audit.vaultMatchCol = 'Stock Number';
+        if (!ok) {
+          log(`Self-test failed: ${test.name}`, 'warn');
         } else {
-          state.audit.stockMatchCol = el.stockMatchCol?.value || state.audit.stockMatchCol;
-          state.audit.vaultMatchCol = el.vaultMatchCol?.value || state.audit.vaultMatchCol;
+          pass++;
         }
+      }
 
-        const manualEnabled = !state.audit.useDefaultMatchRule;
-        if (el.manualMatchGrid) el.manualMatchGrid.style.display = manualEnabled ? 'grid' : 'none';
-        if (el.stockMatchCol) el.stockMatchCol.disabled = !manualEnabled;
-        if (el.vaultMatchCol) el.vaultMatchCol.disabled = !manualEnabled;
-
-        if (el.defaultMatchMeta) {
-          el.defaultMatchMeta.textContent = state.audit.useDefaultMatchRule
-            ? 'Active. Matching is exact after trimming and lowercasing (case-insensitive).'
-            : 'Disabled. Manual match columns enabled (still case-insensitive exact on the selected columns).';
-        }
-
-        updateAuditMappings();
-        buildVaultIndex();
-        scheduleAuditRun();
-      });
+      if (pass !== tests.length) {
+        log(`Self-tests: ${pass}/${tests.length} passed`, 'warn');
+      } else {
+        log(`Self-tests: ${pass}/${tests.length} passed`, 'info');
+      }
     }
-
-    if (el.descTitleToggle) {
-      el.descTitleToggle.addEventListener('change', () => {
-        const pdIdx = findColumnIndex(state.stock.headers, 'Part Desc');
-        const vtIdx = findColumnIndex(state.vault.headers, 'Title');
-        const can = (pdIdx !== -1 && vtIdx !== -1);
-        state.audit.useDescTitleRule = !!el.descTitleToggle.checked && can;
-        if (!can) {
-          el.descTitleToggle.checked = false;
-          state.audit.useDescTitleRule = false;
-        }
-        if (el.descTitleMeta) {
-          el.descTitleMeta.textContent = !can
-            ? 'Unavailable. Requires Stock column "Part Desc" and Vault column "Title".'
-            : (state.audit.useDescTitleRule
-              ? `On. Using loose word match (min shared tokens ${FUZZY_MIN_SHARED_TOKENS}, min Jaccard ${FUZZY_MIN_JACCARD}).`
-              : 'Off. If enabled, rows that fail the default match will try a word-overlap match between Stock Part Desc and Vault Title.');
-        }
-        if (state.audit.useDescTitleRule) buildTitleIndex();
-        scheduleAuditRun();
-      });
-    }
-
-    if (el.stockMatchCol) {
-      el.stockMatchCol.addEventListener('change', () => {
-        if (state.audit.useDefaultMatchRule) return;
-        state.audit.stockMatchCol = el.stockMatchCol.value;
-        updateAuditMappings();
-        scheduleAuditRun();
-      });
-    }
-
-    if (el.vaultMatchCol) {
-      el.vaultMatchCol.addEventListener('change', () => {
-        if (state.audit.useDefaultMatchRule) return;
-        state.audit.vaultMatchCol = el.vaultMatchCol.value;
-        updateAuditMappings();
-        buildVaultIndex();
-        scheduleAuditRun();
-      });
-    }
-
-    if (el.runAudit) el.runAudit.addEventListener('click', runAuditNow);
 
     // Boot
+    renderAuditCounts();
+    renderVaultFiletypeSummary();
+    ensureReviewVisibility();
     runSelfTests();
     log('Ready. Load your XLSX files to begin.', 'info');
   </script>
