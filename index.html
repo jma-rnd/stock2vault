@@ -11,9 +11,6 @@
 <body>
   <header>
     <h1>Vault vs Stock Drawing Audit</h1>
-    <div class="sub">
-      Upload a <b>Stock Movements</b> XLSX and a <b>Vault File Listing</b> XLSX. The app will show detected column headings for each file. For the stock file, it will also summarize <span class="muted">Group Desc</span> values (unique entries + row counts) with checkboxes.
-    </div>
   </header>
 
   <main class="wrap">
@@ -25,15 +22,14 @@
       <div class="body">
         <div class="uploader">
           <input id="stockFile" type="file" accept=".xlsx,.xls" />
-          <div class="hint">
-            Expected: columns named <span class="mono">Part Code</span>, <span class="mono">Part Desc</span>, <span class="mono">Group Desc</span>, and <span class="mono">Last Movement Date</span>.
-          </div>
         </div>
 
         <div class="kvs">
           <div>
-            <div class="sectionTitle">Detected column headings</div>
-            <div class="chips" id="stockHeaders"></div>
+            <details class="collapsible">
+              <summary class="sectionTitle">Detected column headings</summary>
+              <div class="chips" id="stockHeaders"></div>
+            </details>
           </div>
 
           <div>
@@ -80,9 +76,6 @@
               <div class="row"><div></div><div class="muted">Load a stock file to see Group Desc values.</div><div></div></div>
             </div>
 
-            <div class="footerNote">
-              Tip: this is a lightweight, in-browser audit helper. Nothing is uploaded anywhere; files are processed locally.
-            </div>
           </div>
         </div>
       </div>
@@ -96,13 +89,12 @@
       <div class="body">
         <div class="uploader">
           <input id="vaultFile" type="file" accept=".xlsx,.xls" />
-          <div class="hint">
-            Expected: columns named <span class="mono">Stock Number</span>, <span class="mono">Filetype</span>, <span class="mono">State</span>, and <span class="mono">Title</span>.
-          </div>
         </div>
 
-        <div class="sectionTitle">Detected column headings</div>
-        <div class="chips" id="vaultHeaders"></div>
+        <details class="collapsible">
+          <summary class="sectionTitle">Detected column headings</summary>
+          <div class="chips" id="vaultHeaders"></div>
+        </details>
 
         <div class="sectionTitle">Filetype summary</div>
         <div class="list" id="vaultFiletypeList" aria-live="polite">
@@ -113,9 +105,6 @@
           <div class="row" style="grid-template-columns: 1fr 110px;"><div class="muted">Load a vault file to see Filetype values.</div><div></div></div>
         </div>
 
-        <div class="footerNote">
-          Next steps we can add: stronger matching rules, drawing/name normalization, and export an audit XLSX.
-        </div>
       </div>
     </section>
 
@@ -126,19 +115,14 @@
       </div>
       <div class="body">
         <div class="toolbar" style="margin-bottom:12px;">
-          <div class="left">
-            <button id="runAudit" disabled>Run audit</button>
-            <button class="secondary" id="toggleRules" disabled>Rules</button>
-          </div>
+          <div class="left"></div>
           <div class="right">
             <span class="hint" id="auditHint">Load both files to compute results.</span>
           </div>
         </div>
 
-        <div id="rulesPanel" class="rules" style="display:none;">
-          <div class="sectionTitle" style="margin-top:0;">Hidden rules panel</div>
-          <div class="hint">This panel will become fully customisable. For now the primary association rule is hard-coded: <b>Stock Part Code</b> ↔ <b>Vault Stock Number</b> (case-insensitive exact match).</div>
-
+        <div id="rulesPanel" class="rules">
+          <div class="sectionTitle" style="margin-top:0;">Rules</div>
           <div style="margin-top:10px; display:grid; gap:10px;">
             <label class="fopt" style="margin:0;"><input type="checkbox" id="defaultMatchToggle" checked /> <span><b>Use default association</b> (Part Code ↔ Stock Number)</span></label>
             <div class="fmeta" id="defaultMatchMeta">Active. Matching is exact after trimming and lowercasing (case-insensitive).</div>
@@ -164,16 +148,6 @@
             </div>
           </div>
 
-          <div class="rulesGrid" id="manualMatchGrid">
-            <div>
-              <div class="flabel">Stock match column</div>
-              <select id="stockMatchCol" disabled></select>
-            </div>
-            <div>
-              <div class="flabel">Vault match column</div>
-              <select id="vaultMatchCol" disabled></select>
-            </div>
-          </div>
         </div>
 
         <div class="auditTable" role="table" aria-label="Audit summary">

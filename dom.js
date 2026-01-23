@@ -30,7 +30,6 @@ const el = {
   auditRows: document.getElementById('auditRows'),
   auditHint: document.getElementById('auditHint'),
   runAudit: document.getElementById('runAudit'),
-  toggleRules: document.getElementById('toggleRules'),
   rulesPanel: document.getElementById('rulesPanel'),
 
   defaultMatchToggle: document.getElementById('defaultMatchToggle'),
@@ -45,9 +44,6 @@ const el = {
   tunableJacVal: document.getElementById('tunableJacVal'),
   tunableControls: document.getElementById('tunableControls'),
 
-  stockMatchCol: document.getElementById('stockMatchCol'),
-  vaultMatchCol: document.getElementById('vaultMatchCol'),
-  manualMatchGrid: document.getElementById('manualMatchGrid'),
 
   log: document.getElementById('log'),
   reviewCard: document.getElementById('reviewCard'),

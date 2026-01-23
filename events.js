@@ -1,27 +1,6 @@
 // -----------------------------
 // Event handlers
 // -----------------------------
-el.toggleRules.addEventListener('click', () => {
-  const isOpen = el.rulesPanel.style.display !== 'none';
-  el.rulesPanel.style.display = isOpen ? 'none' : 'block';
-});
-
-el.defaultMatchToggle.addEventListener('change', () => {
-  refreshRulesAvailability();
-    ensureReviewVisibility();
-});
-
-el.stockMatchCol.addEventListener('change', () => {
-  if (state.audit.useDefaultMatchRule) return;
-  state.audit.stockMatchCol = el.stockMatchCol.value;
-  refreshRulesAvailability();
-});
-
-el.vaultMatchCol.addEventListener('change', () => {
-  if (state.audit.useDefaultMatchRule) return;
-  state.audit.vaultMatchCol = el.vaultMatchCol.value;
-  refreshRulesAvailability();
-});
 
 el.descTitleToggle.addEventListener('change', () => {
   state.audit.useDescTitleRule = !!el.descTitleToggle.checked;
@@ -61,7 +40,9 @@ if (el.reviewNext) {
   });
 }
 
-el.runAudit.addEventListener('click', runAuditNow);
+if (el.runAudit) {
+  el.runAudit.addEventListener('click', runAuditNow);
+}
 
 el.groupSearch.addEventListener('input', renderGroupList);
 

@@ -1,24 +1,9 @@
-// -----------------------------
-// Rules panel wiring
-// -----------------------------
-function buildSelectOptions(selectEl, headers, preferredHeader) {
-  selectEl.innerHTML = '';
-  for (const h of headers) {
-    const opt = document.createElement('option');
-    opt.value = h;
-    opt.textContent = h || '(blank)';
-    if (preferredHeader && normalizeHeader(h) === normalizeHeader(preferredHeader)) opt.selected = true;
-    selectEl.appendChild(opt);
-  }
-}
-
 function refreshRulesAvailability() {
   const hasStock = state.stock.headers.length > 0;
   const hasVault = state.vault.headers.length > 0;
   const ready = hasStock && hasVault;
 
-  el.toggleRules.disabled = !ready;
-  el.runAudit.disabled = !ready;
+  if (el.runAudit) el.runAudit.disabled = !ready;
 
   if (!ready) return;
 
@@ -29,26 +14,17 @@ function refreshRulesAvailability() {
   const fixedStateIdx = findColumnIndex(state.vault.headers, 'State');
   if (fixedTypeIdx === -1 || fixedStateIdx === -1) {
     setAuditStatus('Vault export unexpected', 'error');
-    el.runAudit.disabled = true;
+    if (el.runAudit) el.runAudit.disabled = true;
     log('Vault export is missing required columns. Expected headers: "Filetype" and "State".', 'error');
   }
 
-  // Populate manual drop-downs
-  buildSelectOptions(el.stockMatchCol, state.stock.headers, state.audit.stockMatchCol);
-  buildSelectOptions(el.vaultMatchCol, state.vault.headers, state.audit.vaultMatchCol);
-
-  // Enable/disable manual grid based on default toggle
-  const useDefault = !!el.defaultMatchToggle.checked;
-  state.audit.useDefaultMatchRule = useDefault;
-  el.stockMatchCol.disabled = useDefault;
-  el.vaultMatchCol.disabled = useDefault;
-
-  if (useDefault) {
-    state.audit.stockMatchCol = 'Part Code';
-    state.audit.vaultMatchCol = 'Stock Number';
-  } else {
-    state.audit.stockMatchCol = el.stockMatchCol.value || state.audit.stockMatchCol;
-    state.audit.vaultMatchCol = el.vaultMatchCol.value || state.audit.vaultMatchCol;
+  // Default match rule is always enforced (manual selection removed).
+  state.audit.useDefaultMatchRule = true;
+  state.audit.stockMatchCol = 'Part Code';
+  state.audit.vaultMatchCol = 'Stock Number';
+  if (el.defaultMatchToggle) {
+    el.defaultMatchToggle.checked = true;
+    el.defaultMatchToggle.disabled = true;
   }
 
   // Desc↔Title prerequisites
@@ -73,9 +49,7 @@ function refreshRulesAvailability() {
   el.tunableControls.style.display = state.audit.useDescTitleTunableRule ? 'grid' : 'none';
 
   // Meta labels
-  el.defaultMatchMeta.textContent = useDefault
-    ? 'Active. Matching is exact after trimming and lowercasing (case-insensitive).'
-    : 'Off. Using manual match columns below.';
+  el.defaultMatchMeta.textContent = 'Active. Matching is exact after trimming and lowercasing (case-insensitive).';
 
   el.descTitleMeta.textContent = !canUseDescTitle
     ? 'Unavailable. Requires Stock column "Part Desc" and Vault column "Title".'

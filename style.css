@@ -122,13 +122,39 @@
       margin-top: 12px;
     }
 
-    .sectionTitle {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: .14em;
-      color: var(--muted2);
-      margin: 14px 0 8px;
-    }
+.sectionTitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .14em;
+  color: var(--muted2);
+  margin: 14px 0 8px;
+}
+
+.collapsible {
+  margin-top: 14px;
+}
+
+.collapsible > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.collapsible > summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible > summary::after {
+  content: "▾";
+  display: inline-block;
+  margin-left: 8px;
+  transform: rotate(-90deg);
+  transition: transform 120ms ease;
+}
+
+.collapsible[open] > summary::after {
+  transform: rotate(0deg);
+}
 
     .chips {
       display: flex;
