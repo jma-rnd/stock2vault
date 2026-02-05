@@ -64,45 +64,6 @@ function reviewKey(item) {
   return `${normalizeKey(item.partCode)}|${normalizeKey(item.title)}|${item.rule}`;
 }
 
-const REVIEW_BLOCKED_KEY = 'vaultAudit.review.blockedPairs';
-const REVIEW_APPROVED_KEY = 'vaultAudit.review.approvedPairs';
-const REVIEW_RULES_KEY = 'vaultAudit.review.rules';
-
-function loadReviewFeedback() {
-  try {
-    const blocked = JSON.parse(localStorage.getItem(REVIEW_BLOCKED_KEY) || '[]');
-    const approved = JSON.parse(localStorage.getItem(REVIEW_APPROVED_KEY) || '[]');
-    const rules = JSON.parse(localStorage.getItem(REVIEW_RULES_KEY) || '{}');
-    state.audit.review.blockedPairs = new Set(blocked);
-    state.audit.review.approvedPairs = new Set(approved);
-    state.audit.review.rules.conflictPairs = Array.isArray(rules.conflictPairs) ? rules.conflictPairs : [];
-    state.audit.review.rules.conflictGroups = Array.isArray(rules.conflictGroups) ? rules.conflictGroups : [];
-    state.audit.review.rules.requiredTokens = Array.isArray(rules.requiredTokens) ? rules.requiredTokens : [];
-    state.audit.review.rules.requiredGroups = Array.isArray(rules.requiredGroups) ? rules.requiredGroups : [];
-    state.audit.review.rules.approvedTokens = rules.approvedTokens && typeof rules.approvedTokens === 'object'
-      ? rules.approvedTokens
-      : {};
-  } catch (_) {
-    state.audit.review.blockedPairs = new Set();
-    state.audit.review.approvedPairs = new Set();
-    state.audit.review.rules.conflictPairs = [];
-    state.audit.review.rules.conflictGroups = [];
-    state.audit.review.rules.requiredTokens = [];
-    state.audit.review.rules.requiredGroups = [];
-    state.audit.review.rules.approvedTokens = {};
-  }
-  renderRuleLists();
-}
-
-function saveReviewFeedback() {
-  try {
-    localStorage.setItem(REVIEW_BLOCKED_KEY, JSON.stringify(Array.from(state.audit.review.blockedPairs)));
-    localStorage.setItem(REVIEW_APPROVED_KEY, JSON.stringify(Array.from(state.audit.review.approvedPairs)));
-    localStorage.setItem(REVIEW_RULES_KEY, JSON.stringify(state.audit.review.rules));
-  } catch (_) {}
-  renderRuleLists();
-}
-
 function exportRulesJson() {
   const payload = {
     blockedPairs: Array.from(state.audit.review.blockedPairs),
@@ -139,7 +100,7 @@ async function importRulesJson(file) {
       ? rules.approvedTokens
       : {};
 
-    saveReviewFeedback();
+    renderRuleLists();
     if (el.rulesImportStatus) {
       el.rulesImportStatus.textContent = 'Imported';
       el.rulesImportStatus.className = 'pill ok';
@@ -162,7 +123,7 @@ function recordReviewDecision(item, decision) {
     state.audit.review.approvedPairs.add(pairKey);
     state.audit.review.blockedPairs.delete(pairKey);
   }
-  saveReviewFeedback();
+  renderRuleLists();
 }
 
 function renderRuleLists() {
@@ -234,6 +195,22 @@ function renderRuleLists() {
       el.ruleApproved.appendChild(chip);
     }
   }
+}
+
+function clearReviewRules() {
+  state.audit.review.blockedPairs = new Set();
+  state.audit.review.approvedPairs = new Set();
+  state.audit.review.rules.conflictPairs = [];
+  state.audit.review.rules.conflictGroups = [];
+  state.audit.review.rules.requiredTokens = [];
+  state.audit.review.rules.requiredGroups = [];
+  state.audit.review.rules.approvedTokens = {};
+  renderRuleLists();
+  if (el.rulesImportStatus) {
+    el.rulesImportStatus.textContent = 'Local';
+    el.rulesImportStatus.className = 'pill';
+  }
+  log('Cleared active match rules.', 'info');
 }
 
 function ensureReviewVisibility() {
@@ -324,7 +301,7 @@ function renderReviewBatch() {
       for (const tok of matched) {
         state.audit.review.rules.approvedTokens[tok] = (state.audit.review.rules.approvedTokens[tok] || 0) + 1;
       }
-      saveReviewFeedback();
+      renderRuleLists();
       renderReviewBatch();
     });
 
@@ -417,7 +394,7 @@ function renderReviewBatch() {
       inst.textContent = 'Select a phrase in the Stock and Vault text, then click "Save conflict rule".';
       actions.appendChild(inst);
 
-      if (sel.stock || sel.vault) {
+        if (sel.stock || sel.vault) {
         const hint = document.createElement('div');
         hint.className = 'hint';
         const parts = [];
@@ -452,7 +429,7 @@ function renderReviewBatch() {
         }
         state.audit.review.selections.set(key, { stock: null, vault: null });
         state.audit.review.decisions.set(key, 'flagged');
-        saveReviewFeedback();
+        renderRuleLists();
         renderReviewBatch();
       });
 
@@ -626,8 +603,8 @@ function exportAuditXlsx() {
   buildVaultIndex();
   if (state.audit.useDescTitleRule) buildTitleIndex();
 
-  const includeUnmatched = el.exportIncludeUnmatched ? !!el.exportIncludeUnmatched.checked : true;
-  const includeVaultDetails = el.exportIncludeVaultDetails ? !!el.exportIncludeVaultDetails.checked : true;
+  const includeUnmatched = true;
+  const includeVaultDetails = true;
 
   const rows = [];
   const filteredStock = getFilteredStockRows();
@@ -647,7 +624,15 @@ function exportAuditXlsx() {
       const wildcardMatches = findVaultMatches(partCode);
       if (wildcardMatches.length) {
         matches = wildcardMatches;
-        matchType = 'wildcard';
+        if (wildcardMatches[0].pdfNameMatch) {
+          matchType = 'pdf-name';
+        } else if (wildcardMatches[0].wildcardKind === 'length') {
+          matchType = 'wildcard-length';
+        } else if (wildcardMatches[0].wildcardKind === 'galv') {
+          matchType = 'wildcard-galv';
+        } else {
+          matchType = 'wildcard';
+        }
       }
     }
 

@@ -84,6 +84,7 @@ function updateAuditMappings() {
   state.audit.vaultStateIdx = findColumnIndex(state.vault.headers, 'State');
   state.audit.vaultTitleIdx = findColumnIndex(state.vault.headers, 'Title');
   state.audit.vaultPartNumberIdx = findColumnIndex(state.vault.headers, 'Part Number');
+  state.audit.vaultNameIdx = findColumnIndex(state.vault.headers, 'Name');
 }
 
 // Normalize any path-ish string to a base filename (no directories)
@@ -99,6 +100,27 @@ function baseNameFromAny(nameVal) {
   const low = just.toLowerCase();
   const dot = low.lastIndexOf('.');
   return (dot > 0 ? low.slice(0, dot) : low);
+}
+
+function extractDrawingNumber(nameVal) {
+  const s = String(nameVal || '').toUpperCase();
+  const m = s.match(/\b[A-Z]{1,3}\d{4}\b/);
+  return m ? m[0] : '';
+}
+
+function parsePdfNameInfo(nameVal) {
+  const raw = stripPath(nameVal);
+  if (!raw) return { drawingNumber: '', partNumber: '' };
+
+  const upper = raw.toUpperCase();
+  const noExt = upper.replace(/\.[A-Z0-9]+$/, '');
+  const cleaned = noExt.replace(/\bREV(?:ISION)?\s*\d+\b/g, ' ');
+
+  const drawingNumber = extractDrawingNumber(cleaned);
+  const parts = cleaned.match(/[A-Z0-9]{6,}/g) || [];
+  const partNumber = parts.length ? parts[parts.length - 1] : '';
+
+  return { drawingNumber, partNumber };
 }
 
 function detectExt(filetypeVal, nameVal) {
@@ -124,21 +146,27 @@ function buildWildcardPattern(code) {
   const raw = String(code || '').trim();
   if (!raw) return null;
 
-  const tokenRe = /\([^)]+\)/g;
+  const tokenRe = /\([^)]*\)/g;
   let lastIdx = 0;
   const parts = [];
+  let kind = '';
   let m;
   while ((m = tokenRe.exec(raw)) !== null) {
     const before = raw.slice(lastIdx, m.index);
     if (before) parts.push(escapeRegexLiteral(before.toUpperCase()));
 
     const token = m[0].slice(1, -1).trim().toUpperCase();
+    const isLast = (m.index + m[0].length === raw.length);
     if (token === 'LENGTH') {
       parts.push('\\d{2,4}');
+      kind = kind || 'length';
     } else if (token === 'G') {
       parts.push('G?');
+      if (!kind) kind = 'galv';
     } else {
-      parts.push('[A-Z0-9]+');
+      const max = isLast ? 5 : 10;
+      parts.push(`[A-Z]{0,${max}}`);
+      if (!kind) kind = 'letters';
     }
     lastIdx = m.index + m[0].length;
   }
@@ -148,7 +176,7 @@ function buildWildcardPattern(code) {
   if (!parts.length) return null;
   const pattern = '^' + parts.join('') + '$';
   const wildcardCount = (raw.match(tokenRe) || []).length;
-  return { pattern, wildcardCount };
+  return { pattern, wildcardCount, kind };
 }
 
 function renderWildcardUI() {
@@ -222,22 +250,27 @@ function renderWildcardMatches(input) {
 function buildVaultIndex() {
   state.audit.vaultIndex = new Map();
   state.audit.vaultPatternIndex = [];
+  state.audit.pdfNameIndex = new Map();
+  state.audit.idwDrawingNumbers = new Set();
   if (!state.vault.rows.length) return;
   updateAuditMappings();
 
   const mIdx = state.audit.vaultMatchIdx;
   const tIdx = state.audit.vaultTypeIdx;
   const sIdx = state.audit.vaultStateIdx;
+  const nIdx = state.audit.vaultNameIdx;
 
   for (const r of state.vault.rows) {
     const key = normalizeKey(safeCell(r, mIdx));
     if (!key) continue;
     const nameVal = safeCell(r, mIdx);
+    const nameColVal = nIdx !== -1 ? safeCell(r, nIdx) : '';
     const typeVal = safeCell(r, tIdx);
     const stateVal = safeCell(r, sIdx);
-    const ext = detectExt(typeVal, nameVal);
-    const base = baseNameFromAny(nameVal);
-    const entry = { key, name: nameVal, base, ext, filetype: String(typeVal || ''), state: String(stateVal || ''), row: r };
+    const ext = detectExt(typeVal, nameColVal || nameVal);
+    const displayName = nameVal || nameColVal;
+    const base = baseNameFromAny(displayName);
+    const entry = { key, name: displayName, base, ext, filetype: String(typeVal || ''), state: String(stateVal || ''), row: r };
     if (!state.audit.vaultIndex.has(key)) state.audit.vaultIndex.set(key, []);
     state.audit.vaultIndex.get(key).push(entry);
 
@@ -249,10 +282,57 @@ function buildVaultIndex() {
           template: nameVal,
           pattern: built.pattern,
           entry,
+          kind: built.kind || 'letters',
           wildcardCount: built.wildcardCount,
           literalLen: nameVal.length,
         });
+        if (built.kind) entry.wildcardKind = built.kind;
       }
+    }
+  }
+
+  if (nIdx !== -1) {
+    for (const r of state.vault.rows) {
+      const nameColVal = safeCell(r, nIdx);
+      if (!nameColVal) continue;
+      const typeVal = safeCell(r, tIdx);
+      const ext = detectExt(typeVal, nameColVal);
+      if (ext !== '.idw') continue;
+      const drawing = extractDrawingNumber(nameColVal);
+      if (drawing) state.audit.idwDrawingNumbers.add(drawing);
+    }
+
+    for (const r of state.vault.rows) {
+      const nameColVal = safeCell(r, nIdx);
+      if (!nameColVal) continue;
+      const typeVal = safeCell(r, tIdx);
+      const stateVal = safeCell(r, sIdx);
+      const ext = detectExt(typeVal, nameColVal);
+      if (ext !== '.pdf') continue;
+
+      const info = parsePdfNameInfo(nameColVal);
+      if (!info.partNumber) continue;
+      if (info.drawingNumber && state.audit.idwDrawingNumbers.has(info.drawingNumber)) continue;
+
+      const key = normalizeKey(info.partNumber);
+      if (!key) continue;
+
+      const nameVal = safeCell(r, mIdx);
+      const displayName = nameVal || nameColVal;
+      const base = baseNameFromAny(displayName);
+      const entry = {
+        key,
+        name: displayName,
+        base,
+        ext,
+        filetype: String(typeVal || ''),
+        state: String(stateVal || ''),
+        row: r,
+        pdfNameMatch: true,
+        drawingNumber: info.drawingNumber,
+      };
+      if (!state.audit.pdfNameIndex.has(key)) state.audit.pdfNameIndex.set(key, []);
+      state.audit.pdfNameIndex.get(key).push(entry);
     }
   }
 
@@ -265,13 +345,20 @@ function findVaultMatches(stockCodeRaw) {
   if (exact.length) return exact;
 
   const code = String(stockCodeRaw || '').trim().toUpperCase();
-  if (!code || !state.audit.vaultPatternIndex.length) return [];
+  if (!code) return [];
+  if (!state.audit.vaultPatternIndex.length) {
+    const pdfOnly = state.audit.pdfNameIndex.get(exactKey) || [];
+    return pdfOnly;
+  }
 
   const matches = [];
   for (const pat of state.audit.vaultPatternIndex) {
     if (pat.regex.test(code)) matches.push(pat);
   }
-  if (!matches.length) return [];
+  if (!matches.length) {
+    const pdfOnly = state.audit.pdfNameIndex.get(exactKey) || [];
+    return pdfOnly;
+  }
 
   matches.sort((a, b) => (a.wildcardCount - b.wildcardCount) || (b.literalLen - a.literalLen));
 
@@ -285,5 +372,10 @@ function findVaultMatches(stockCodeRaw) {
     seen.add(key);
     out.push(m.entry);
   }
-  return out;
+  if (out.length) return out;
+
+  const pdfOnly = state.audit.pdfNameIndex.get(exactKey) || [];
+  if (pdfOnly.length) return pdfOnly;
+
+  return [];
 }

@@ -47,9 +47,12 @@ const state = {
         vaultStateIdx: -1,
         vaultTitleIdx: -1,
         vaultPartNumberIdx: -1,
+        vaultNameIdx: -1,
 
         vaultIndex: new Map(),
         vaultPatternIndex: [],
+        pdfNameIndex: new Map(),
+        idwDrawingNumbers: new Set(),
         titleTokenIndex: new Map(),
         titleToEntries: new Map(),
 

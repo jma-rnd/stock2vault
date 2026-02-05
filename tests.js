@@ -11,6 +11,14 @@ function runSelfTests() {
   t('baseNameFromAny drops ext', () => baseNameFromAny('a/b/Thing.IDW') === 'thing');
   t('detectExt finds idw in filetype', () => detectExt('Autodesk Inventor Drawing (.idw)', 'Thing') === '.idw');
   t('detectExt finds pdf in name', () => detectExt('', 'ABC.PDF') === '.pdf');
+  t('parsePdfNameInfo extracts drawing + part', () => {
+    const info = parsePdfNameInfo('C0059 - JCB28061B936GLF.pdf');
+    return info.drawingNumber === 'C0059' && info.partNumber === 'JCB28061B936GLF';
+  });
+  t('parsePdfNameInfo ignores rev tokens', () => {
+    const info = parsePdfNameInfo('C0056 Rev 0 JCB2808B1236BTO.pdf');
+    return info.drawingNumber === 'C0056' && info.partNumber === 'JCB2808B1236BTO';
+  });
 
   t('parseLooseDate parses dd/mm/yyyy', () => {
     const d = parseLooseDate('13/01/2026');
@@ -87,6 +95,13 @@ function runSelfTests() {
     const set = new Set(['m12','bolt']);
     const out = highlightTokensInText(s, set);
     return out.includes('<mark') && out.toLowerCase().includes('m12') && out.toLowerCase().includes('bolt');
+  });
+
+  t('buildWildcardPattern supports trailing letter suffix token', () => {
+    const built = buildWildcardPattern('JK15150538H1(TIE)');
+    if (!built || !built.pattern) return false;
+    const re = new RegExp(built.pattern);
+    return re.test('JK15150538H1RL') && re.test('JK15150538H1R') && !re.test('JK15150538H112') && built.kind === 'letters';
   });
 
   let pass = 0;

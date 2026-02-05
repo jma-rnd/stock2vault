@@ -226,8 +226,8 @@ function weightedJaccard(aTokens, bTokens, aMeta, bMeta) {
 }
 
 // Conservative defaults
-const FUZZY_MIN_SHARED_TOKENS = 4;
-const FUZZY_MIN_JACCARD = 0.50;
+const FUZZY_MIN_SHARED_TOKENS = 3;
+const FUZZY_MIN_JACCARD = 0.40;
 
 function buildTitleIndex() {
   state.audit.titleTokenIndex = new Map();

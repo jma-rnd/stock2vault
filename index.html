@@ -207,8 +207,8 @@
 
     <section class="card gridFull">
       <div class="head">
-        <h2>Active match rules</h2>
-        <div class="pill" id="rulesStatus">Local</div>
+        <h2>Active match rules & audit export</h2>
+        <div class="pill" id="exportStatus">Ready</div>
       </div>
       <div class="body">
         <details class="collapsible">
@@ -223,16 +223,16 @@
           <summary class="sectionTitle">Approved tokens</summary>
           <div class="chips" id="ruleApproved"></div>
         </details>
-        <div class="hint" style="margin-top:10px;">Rules are stored in your browser (localStorage) and apply to future matches.</div>
-      </div>
-    </section>
+        <div class="toolbar" style="margin-top:12px;">
+          <div class="left">
+            <button class="secondary" id="clearRules">Clear rules</button>
+          </div>
+          <div class="right">
+            <span class="hint">Rules shown here are from the current session or an imported JSON file.</span>
+          </div>
+        </div>
 
-    <section class="card gridFull">
-      <div class="head">
-        <h2>5) Audit export</h2>
-        <div class="pill" id="exportStatus">Ready</div>
-      </div>
-      <div class="body">
+        <div class="sectionTitle" style="margin-top:18px;">Audit export</div>
         <div class="toolbar" style="margin-bottom:12px;">
           <div class="left">
             <button id="exportAudit" disabled>Export audit XLSX</button>
@@ -243,16 +243,6 @@
           </div>
         </div>
 
-        <div class="rulesGrid" style="margin-top:0;">
-          <label class="fopt" style="margin:0;">
-            <input type="checkbox" id="exportIncludeUnmatched" checked />
-            <span>Include unmatched stock rows</span>
-          </label>
-          <label class="fopt" style="margin:0;">
-            <input type="checkbox" id="exportIncludeVaultDetails" checked />
-            <span>Include matched vault details</span>
-          </label>
-        </div>
       </div>
     </section>
 

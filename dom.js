@@ -34,9 +34,8 @@ const el = {
   exportAudit: document.getElementById('exportAudit'),
   exportStatus: document.getElementById('exportStatus'),
   exportHint: document.getElementById('exportHint'),
-  exportIncludeUnmatched: document.getElementById('exportIncludeUnmatched'),
-  exportIncludeVaultDetails: document.getElementById('exportIncludeVaultDetails'),
   exportRules: document.getElementById('exportRules'),
+  clearRules: document.getElementById('clearRules'),
 
   rulesImportFile: document.getElementById('rulesImportFile'),
   rulesImportBtn: document.getElementById('rulesImportBtn'),
@@ -60,7 +59,6 @@ const el = {
   reviewList: document.getElementById('reviewList'),
   reviewNext: document.getElementById('reviewNext'),
 
-  rulesStatus: document.getElementById('rulesStatus'),
   ruleConflicts: document.getElementById('ruleConflicts'),
   ruleRequired: document.getElementById('ruleRequired'),
   ruleApproved: document.getElementById('ruleApproved'),

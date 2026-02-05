@@ -55,6 +55,10 @@ if (el.exportRules) {
   el.exportRules.addEventListener('click', exportRulesJson);
 }
 
+if (el.clearRules) {
+  el.clearRules.addEventListener('click', clearReviewRules);
+}
+
 if (el.rulesImportBtn) {
   el.rulesImportBtn.addEventListener('click', () => {
     if (el.rulesImportFile && el.rulesImportFile.files && el.rulesImportFile.files[0]) {
