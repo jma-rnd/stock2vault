@@ -30,12 +30,9 @@ const DEFAULT_GROUP_DESCS = [
 ];
 
 const state = {
-  audit: {
-    useDefaultMatchRule: true,
-    useDescTitleRule: false,
-    useDescTitleTunableRule: false,
-    tunableMinSharedTokens: 4,
-    tunableMinJaccard: 0.50,
+      audit: {
+        useDefaultMatchRule: true,
+        useDescTitleRule: true,
 
     stockMatchCol: 'Part Code',
     vaultMatchCol: 'Stock Number',
@@ -45,16 +42,18 @@ const state = {
     stockDescIdx: -1,
     stockMoveDateIdx: -1,
 
-    vaultMatchIdx: -1,
-    vaultTypeIdx: -1,
-    vaultStateIdx: -1,
-    vaultTitleIdx: -1,
+        vaultMatchIdx: -1,
+        vaultTypeIdx: -1,
+        vaultStateIdx: -1,
+        vaultTitleIdx: -1,
+        vaultPartNumberIdx: -1,
 
-    vaultIndex: new Map(),
-    titleTokenIndex: new Map(),
-    titleToEntries: new Map(),
+        vaultIndex: new Map(),
+        vaultPatternIndex: [],
+        titleTokenIndex: new Map(),
+        titleToEntries: new Map(),
 
-    counts: {
+        counts: {
       released: 0,
       unreleased: 0,
       pdf: 0,
@@ -64,11 +63,21 @@ const state = {
       totalConsidered: 0,
     },
 
-    review: {
-      items: [],
-      cursor: 0,
-      decisions: new Map(), // key -> 'approved' | 'flagged'
-    },
+        review: {
+          items: [],
+          cursor: 0,
+          decisions: new Map(), // key -> 'approved' | 'flagged'
+          approvedPairs: new Set(),
+          blockedPairs: new Set(),
+          rules: {
+            conflictPairs: [],
+            conflictGroups: [], // [{ aTokens, bTokens, aText, bText }]
+            requiredTokens: [],
+            requiredGroups: [], // [{ tokens, text }]
+            approvedTokens: {}, // token -> count
+          },
+          selections: new Map(), // key -> { stock: token|null, vault: token|null }
+        },
   },
 
   stock: {

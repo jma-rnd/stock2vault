@@ -7,26 +7,6 @@ el.descTitleToggle.addEventListener('change', () => {
   refreshRulesAvailability();
 });
 
-el.descTitleTunableToggle.addEventListener('change', () => {
-  state.audit.useDescTitleTunableRule = !!el.descTitleTunableToggle.checked;
-  el.tunableControls.style.display = state.audit.useDescTitleTunableRule ? 'grid' : 'none';
-  refreshRulesAvailability();
-});
-
-function onTunableChanged() {
-  state.audit.tunableMinSharedTokens = Number(el.tunableTok.value);
-  state.audit.tunableMinJaccard = Number(el.tunableJac.value);
-  el.tunableTokVal.textContent = String(state.audit.tunableMinSharedTokens);
-  el.tunableJacVal.textContent = Number(state.audit.tunableMinJaccard).toFixed(2);
-  if (state.audit.useDescTitleTunableRule) {
-    el.descTitleTunableMeta.textContent = `On. Using tunable loose word match (min shared tokens ${state.audit.tunableMinSharedTokens}, min Jaccard ${Number(state.audit.tunableMinJaccard).toFixed(2)}).`;
-  }
-  scheduleAuditRun();
-}
-
-el.tunableTok.addEventListener('input', onTunableChanged);
-el.tunableJac.addEventListener('input', onTunableChanged);
-
 // Review: pagination
 if (el.reviewNext) {
   el.reviewNext.addEventListener('click', () => {
@@ -38,10 +18,6 @@ if (el.reviewNext) {
     }
     renderReviewBatch();
   });
-}
-
-if (el.runAudit) {
-  el.runAudit.addEventListener('click', runAuditNow);
 }
 
 el.groupSearch.addEventListener('input', renderGroupList);
@@ -64,6 +40,30 @@ el.selectDefault.addEventListener('click', () => {
   log(`Default selection applied. ${out.selected} Group Desc values ticked.`, 'info');
   scheduleAuditRun();
 });
+
+if (el.wildcardTest) {
+  el.wildcardTest.addEventListener('input', () => {
+    renderWildcardMatches(el.wildcardTest.value);
+  });
+}
+
+if (el.exportAudit) {
+  el.exportAudit.addEventListener('click', exportAuditXlsx);
+}
+
+if (el.exportRules) {
+  el.exportRules.addEventListener('click', exportRulesJson);
+}
+
+if (el.rulesImportBtn) {
+  el.rulesImportBtn.addEventListener('click', () => {
+    if (el.rulesImportFile && el.rulesImportFile.files && el.rulesImportFile.files[0]) {
+      importRulesJson(el.rulesImportFile.files[0]);
+    } else {
+      log('Select a rules JSON file to import.', 'warn');
+    }
+  });
+}
 
 // Date filter events
 el.f6m.addEventListener('change', () => setDateFilterMode(el.f6m.checked ? '6m' : 'none'));

@@ -1,4 +1,5 @@
 // Boot
+loadReviewFeedback();
 renderAuditCounts();
 renderVaultFiletypeSummary();
 ensureReviewVisibility();

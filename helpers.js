@@ -45,6 +45,10 @@ function normalizeKey(v) {
   return String(v || '').trim().toLowerCase();
 }
 
+function reviewPairKey(partDesc, title) {
+  return `${normalizeKey(partDesc)}|${normalizeKey(title)}`;
+}
+
 function renderChips(target, headers) {
   clearNode(target);
   if (!headers || headers.length === 0) {

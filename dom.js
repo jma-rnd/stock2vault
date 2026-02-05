@@ -29,20 +29,28 @@ const el = {
   auditStatus: document.getElementById('auditStatus'),
   auditRows: document.getElementById('auditRows'),
   auditHint: document.getElementById('auditHint'),
-  runAudit: document.getElementById('runAudit'),
   rulesPanel: document.getElementById('rulesPanel'),
+
+  exportAudit: document.getElementById('exportAudit'),
+  exportStatus: document.getElementById('exportStatus'),
+  exportHint: document.getElementById('exportHint'),
+  exportIncludeUnmatched: document.getElementById('exportIncludeUnmatched'),
+  exportIncludeVaultDetails: document.getElementById('exportIncludeVaultDetails'),
+  exportRules: document.getElementById('exportRules'),
+
+  rulesImportFile: document.getElementById('rulesImportFile'),
+  rulesImportBtn: document.getElementById('rulesImportBtn'),
+  rulesImportStatus: document.getElementById('rulesImportStatus'),
 
   defaultMatchToggle: document.getElementById('defaultMatchToggle'),
   defaultMatchMeta: document.getElementById('defaultMatchMeta'),
   descTitleToggle: document.getElementById('descTitleToggle'),
   descTitleMeta: document.getElementById('descTitleMeta'),
-  descTitleTunableToggle: document.getElementById('descTitleTunableToggle'),
-  descTitleTunableMeta: document.getElementById('descTitleTunableMeta'),
-  tunableTok: document.getElementById('tunableTok'),
-  tunableTokVal: document.getElementById('tunableTokVal'),
-  tunableJac: document.getElementById('tunableJac'),
-  tunableJacVal: document.getElementById('tunableJacVal'),
-  tunableControls: document.getElementById('tunableControls'),
+
+  wildcardTest: document.getElementById('wildcardTest'),
+  wildcardSummary: document.getElementById('wildcardSummary'),
+  wildcardMatches: document.getElementById('wildcardMatches'),
+  wildcardPatterns: document.getElementById('wildcardPatterns'),
 
 
   log: document.getElementById('log'),
@@ -51,6 +59,11 @@ const el = {
   reviewHint: document.getElementById('reviewHint'),
   reviewList: document.getElementById('reviewList'),
   reviewNext: document.getElementById('reviewNext'),
+
+  rulesStatus: document.getElementById('rulesStatus'),
+  ruleConflicts: document.getElementById('ruleConflicts'),
+  ruleRequired: document.getElementById('ruleRequired'),
+  ruleApproved: document.getElementById('ruleApproved'),
 
   logStatus: document.getElementById('logStatus'),
 };

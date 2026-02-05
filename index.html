@@ -14,101 +14,121 @@
   </header>
 
   <main class="wrap">
-    <section class="card">
-      <div class="head">
-        <h2>1) Stock export</h2>
-        <div class="pill" id="stockStatus">No file loaded</div>
-      </div>
-      <div class="body">
-        <div class="uploader">
-          <input id="stockFile" type="file" accept=".xlsx,.xls" />
+    <div class="col">
+      <section class="card">
+        <div class="head">
+          <h2>1) Stock export</h2>
+          <div class="pill" id="stockStatus">No file loaded</div>
         </div>
-
-        <div class="kvs">
-          <div>
-            <details class="collapsible">
-              <summary class="sectionTitle">Detected column headings</summary>
-              <div class="chips" id="stockHeaders"></div>
-            </details>
+        <div class="body">
+          <div class="uploader">
+            <input id="stockFile" type="file" accept=".xlsx,.xls" />
           </div>
 
-          <div>
-            <div class="sectionTitle">Date filter (Last Movement Date)</div>
-            <div class="filters" id="dateFilters">
-              <label class="fopt"><input type="checkbox" id="f6m" disabled /> <span>Last 6 months</span></label>
-              <label class="fopt"><input type="checkbox" id="f12m" disabled /> <span>Last 12 months</span></label>
-              <label class="fopt"><input type="checkbox" id="fcustom" disabled /> <span>Custom</span></label>
+          <div class="kvs">
+            <div>
+              <details class="collapsible">
+                <summary class="sectionTitle">Detected column headings</summary>
+                <div class="chips" id="stockHeaders"></div>
+              </details>
+            </div>
 
-              <div class="fdates">
-                <div class="fdate">
-                  <div class="flabel">Start</div>
-                  <input type="date" id="fStart" disabled />
+            <div>
+              <div class="sectionTitle">Date filter (Last Movement Date)</div>
+              <div class="filters" id="dateFilters">
+                <label class="fopt"><input type="checkbox" id="f6m" disabled /> <span>Last 6 months</span></label>
+                <label class="fopt"><input type="checkbox" id="f12m" disabled /> <span>Last 12 months</span></label>
+                <label class="fopt"><input type="checkbox" id="fcustom" disabled /> <span>Custom</span></label>
+
+                <div class="fdates">
+                  <div class="fdate">
+                    <div class="flabel">Start</div>
+                    <input type="date" id="fStart" disabled />
+                  </div>
+                  <div class="fdate">
+                    <div class="flabel">End</div>
+                    <input type="date" id="fEnd" disabled />
+                  </div>
                 </div>
-                <div class="fdate">
-                  <div class="flabel">End</div>
-                  <input type="date" id="fEnd" disabled />
+
+                <div class="fmeta" id="fMeta">Load a stock file to enable date filtering.</div>
+              </div>
+            </div>
+
+            <div>
+              <div class="sectionTitle">Group Desc summary</div>
+              <div class="toolbar">
+                <div class="left">
+                  <input class="search" id="groupSearch" placeholder="Search Group Desc..." disabled />
+                </div>
+                <div class="right">
+                  <button class="secondary" id="selectAll" disabled>Select all</button>
+                  <button class="secondary" id="selectNone" disabled>Select none</button>
+                  <button class="secondary" id="selectDefault" disabled>Default</button>
                 </div>
               </div>
 
-              <div class="fmeta" id="fMeta">Load a stock file to enable date filtering.</div>
-            </div>
-          </div>
-
-          <div>
-            <div class="sectionTitle">Group Desc summary</div>
-            <div class="toolbar">
-              <div class="left">
-                <input class="search" id="groupSearch" placeholder="Search Group Desc…" disabled />
-              </div>
-              <div class="right">
-                <button class="secondary" id="selectAll" disabled>Select all</button>
-                <button class="secondary" id="selectNone" disabled>Select none</button>
-                <button class="secondary" id="selectDefault" disabled>Default</button>
+              <div class="list" id="groupList" aria-live="polite">
+                <div class="listHeader">
+                  <div></div>
+                  <div>Group Desc</div>
+                  <div style="text-align:right;">Rows</div>
+                </div>
+                <div class="row"><div></div><div class="muted">Load a stock file to see Group Desc values.</div><div></div></div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+    </div>
 
-            <div class="list" id="groupList" aria-live="polite">
-              <div class="listHeader">
-                <div></div>
-                <div>Group Desc</div>
-                <div style="text-align:right;">Rows</div>
-              </div>
-              <div class="row"><div></div><div class="muted">Load a stock file to see Group Desc values.</div><div></div></div>
+    <div class="col">
+      <section class="card">
+        <div class="head">
+          <h2>2) Vault export</h2>
+          <div class="pill" id="vaultStatus">No file loaded</div>
+        </div>
+        <div class="body">
+          <div class="uploader">
+            <input id="vaultFile" type="file" accept=".xlsx,.xls" />
+          </div>
+
+          <details class="collapsible">
+            <summary class="sectionTitle">Detected column headings</summary>
+            <div class="chips" id="vaultHeaders"></div>
+          </details>
+
+          <div class="sectionTitle">Filetype summary</div>
+          <div class="list" id="vaultFiletypeList" aria-live="polite">
+            <div class="listHeader" style="grid-template-columns: 1fr 110px;">
+              <div>Filetype</div>
+              <div style="text-align:right;">Rows</div>
             </div>
-
+            <div class="row" style="grid-template-columns: 1fr 110px;"><div class="muted">Load a vault file to see Filetype values.</div><div></div></div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="card">
-      <div class="head">
-        <h2>2) Vault export</h2>
-        <div class="pill" id="vaultStatus">No file loaded</div>
-      </div>
-      <div class="body">
-        <div class="uploader">
-          <input id="vaultFile" type="file" accept=".xlsx,.xls" />
+      <section class="card">
+        <div class="head">
+          <h2>Rules import</h2>
+          <div class="pill" id="rulesImportStatus">Local</div>
         </div>
-
-        <details class="collapsible">
-          <summary class="sectionTitle">Detected column headings</summary>
-          <div class="chips" id="vaultHeaders"></div>
-        </details>
-
-        <div class="sectionTitle">Filetype summary</div>
-        <div class="list" id="vaultFiletypeList" aria-live="polite">
-          <div class="listHeader" style="grid-template-columns: 1fr 110px;">
-            <div>Filetype</div>
-            <div style="text-align:right;">Rows</div>
+        <div class="body">
+          <div class="toolbar" style="margin-bottom:12px;">
+            <div class="left">
+              <input id="rulesImportFile" type="file" accept="application/json" />
+            </div>
+            <div class="right">
+              <button class="secondary" id="rulesImportBtn">Import rules</button>
+            </div>
           </div>
-          <div class="row" style="grid-template-columns: 1fr 110px;"><div class="muted">Load a vault file to see Filetype values.</div><div></div></div>
+          <div class="hint">Import a rules JSON file to apply saved review rules in this browser.</div>
         </div>
+      </section>
+    </div>
 
-      </div>
-    </section>
-
-    <section class="card gridFull" id="auditCard">
+<section class="card gridFull" id="auditCard">
       <div class="head">
         <h2>3) Audit output</h2>
         <div class="pill" id="auditStatus">Waiting for files</div>
@@ -127,26 +147,28 @@
             <label class="fopt" style="margin:0;"><input type="checkbox" id="defaultMatchToggle" checked /> <span><b>Use default association</b> (Part Code ↔ Stock Number)</span></label>
             <div class="fmeta" id="defaultMatchMeta">Active. Matching is exact after trimming and lowercasing (case-insensitive).</div>
 
-            <label class="fopt" style="margin:0;"><input type="checkbox" id="descTitleToggle" /> <span><b>Also try Part Desc ↔ Title</b> (loose word match)</span></label>
+            <label class="fopt" style="margin:0;"><input type="checkbox" id="descTitleToggle" checked /> <span><b>Also try Part Desc ↔ Title</b> (loose word match)</span></label>
             <div class="fmeta" id="descTitleMeta">Off. If enabled, rows that fail the default match will try a word-overlap match between Stock Part Desc and Vault Title.</div>
 
-            <label class="fopt" style="margin:0;"><input type="checkbox" id="descTitleTunableToggle" /> <span><b>Also try Part Desc ↔ Title (tunable)</b> (loose word match)</span></label>
-            <div class="fmeta" id="descTitleTunableMeta">Off. If enabled, uses the sliders below to try to reduce false negatives (may increase false positives).</div>
 
-            <div id="tunableControls" style="display:none; gap:10px;">
-              <div class="fmeta" style="margin-top:2px;">Thresholds</div>
-              <div class="rulesGrid" style="margin-top:0;">
-                <div>
-                  <div class="flabel">Min shared tokens: <span id="tunableTokVal" class="mono">4</span></div>
-                  <input type="range" id="tunableTok" min="1" max="10" step="1" value="4" style="width:100%;" />
-                </div>
-                <div>
-                  <div class="flabel">Min Jaccard: <span id="tunableJacVal" class="mono">0.50</span></div>
-                  <input type="range" id="tunableJac" min="0.10" max="0.90" step="0.05" value="0.50" style="width:100%;" />
-                </div>
-              </div>
+          <div class="sectionTitle">Wildcard matching</div>
+          <div class="hint">Patterns are derived from Vault Stock Numbers containing bracketed tokens like (LENGTH) or (G).</div>
+          <div class="rulesGrid">
+            <div>
+              <div class="flabel">Test a Part Code</div>
+              <input type="text" id="wildcardTest" placeholder="Enter Part Code to test" />
+              <div class="fmeta" id="wildcardSummary">No wildcard patterns loaded.</div>
+            </div>
+            <div>
+              <div class="flabel">Matched Vault Stock Numbers</div>
+              <div class="chips" id="wildcardMatches"></div>
             </div>
           </div>
+          <details class="collapsible">
+            <summary class="sectionTitle">Detected wildcard patterns</summary>
+            <div class="chips" id="wildcardPatterns"></div>
+          </details>
+        </div>
 
         </div>
 
@@ -180,6 +202,57 @@
         <div class="reviewWrap" id="reviewList"></div>
 
         <div class="footerNote">Use this to spot-check and flag false positives so we can improve the rules later.</div>
+      </div>
+    </section>
+
+    <section class="card gridFull">
+      <div class="head">
+        <h2>Active match rules</h2>
+        <div class="pill" id="rulesStatus">Local</div>
+      </div>
+      <div class="body">
+        <details class="collapsible">
+          <summary class="sectionTitle">Conflict pairs</summary>
+          <div class="chips" id="ruleConflicts"></div>
+        </details>
+        <details class="collapsible">
+          <summary class="sectionTitle">Required tokens</summary>
+          <div class="chips" id="ruleRequired"></div>
+        </details>
+        <details class="collapsible">
+          <summary class="sectionTitle">Approved tokens</summary>
+          <div class="chips" id="ruleApproved"></div>
+        </details>
+        <div class="hint" style="margin-top:10px;">Rules are stored in your browser (localStorage) and apply to future matches.</div>
+      </div>
+    </section>
+
+    <section class="card gridFull">
+      <div class="head">
+        <h2>5) Audit export</h2>
+        <div class="pill" id="exportStatus">Ready</div>
+      </div>
+      <div class="body">
+        <div class="toolbar" style="margin-bottom:12px;">
+          <div class="left">
+            <button id="exportAudit" disabled>Export audit XLSX</button>
+            <button class="secondary" id="exportRules">Export rules JSON</button>
+          </div>
+          <div class="right">
+            <span class="hint" id="exportHint">Load both files to enable export.</span>
+          </div>
+        </div>
+
+        <div class="rulesGrid" style="margin-top:0;">
+          <label class="fopt" style="margin:0;">
+            <input type="checkbox" id="exportIncludeUnmatched" checked />
+            <span>Include unmatched stock rows</span>
+          </label>
+          <label class="fopt" style="margin:0;">
+            <input type="checkbox" id="exportIncludeVaultDetails" checked />
+            <span>Include matched vault details</span>
+          </label>
+        </div>
       </div>
     </section>
 
